@@ -1,0 +1,38 @@
+import Groq from "groq-sdk";
+
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+export async function POST(req: Request) {
+  const { bookTitle, authorName, genre, bookBlurb, platform, postStyle } = await req.json();
+
+  const prompt = `You are a social media marketing expert for books.
+Book: '${bookTitle}' by ${authorName}
+Genre: ${genre}
+Blurb: ${bookBlurb}
+
+Create 3 social media posts for ${platform} to promote this book.
+Style: ${postStyle || "Engaging and authentic"}
+
+For EACH post provide:
+📝 POST [N]:
+📋 Caption: (2-3 sentences, platform-appropriate length)
+🔍 Visual Concept: (describe the image/graphic to pair with this post)
+🏷️ Hashtags: (5-8 relevant hashtags)
+
+Make each post feel native to ${platform} — not like an ad.`;
+
+  try {
+    const completion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+    });
+    const text = completion.choices[0]?.message?.content;
+    if (!text) {
+      return Response.json({ error: "No content generated." }, { status: 500 });
+    }
+    return Response.json({ content: text });
+  } catch (e: unknown) {
+    const err = e as { message?: string };
+    return Response.json({ error: `⚠️ ${err.message || "Something went wrong."}` }, { status: 500 });
+  }
+}
