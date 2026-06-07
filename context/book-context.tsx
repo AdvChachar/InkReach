@@ -40,15 +40,15 @@ export function BookProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    const existing = initDefaultBook();
-    setBooks(existing);
-    setActiveBookIdState(getActiveBookId());
-
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
       if (data?.user) {
         setUser({ id: data.user.id, email: data.user.email });
-        syncFromSupabase(data.user.id);
+        syncOnlyFromSupabase(data.user.id);
+      } else {
+        const existing = initDefaultBook();
+        setBooks(existing);
+        setActiveBookIdState(getActiveBookId());
       }
     });
 
@@ -64,7 +64,8 @@ export function BookProvider({ children }: { children: ReactNode }) {
         window.location.href = "/login";
       } else if (session?.user) {
         setUser({ id: session.user.id, email: session.user.email });
-        syncFromSupabase(session.user.id).then(() => {
+        clearLocalStorage();
+        syncOnlyFromSupabase(session.user.id).then(() => {
           router.refresh();
         });
       }
@@ -73,21 +74,19 @@ export function BookProvider({ children }: { children: ReactNode }) {
     return () => listener?.subscription.unsubscribe();
   }, []);
 
-  async function syncFromSupabase(userId: string) {
-    await syncBooksToSupabase(userId);
-    await syncAnalysisToSupabase(userId);
-    await syncGeneratedToSupabase(userId);
+  function clearLocalStorage() {
+    localStorage.removeItem("inkreach_books");
+    localStorage.removeItem("inkreach_active_book_id");
+    localStorage.removeItem("inkreach_manuscript_analyses");
+    localStorage.removeItem("inkreach_generated_content");
+  }
+
+  async function syncOnlyFromSupabase(userId: string) {
     await syncBooksFromSupabase(userId);
     await syncAnalysisFromSupabase(userId);
     await syncGeneratedFromSupabase(userId);
     setBooks(getBooks());
     setActiveBookIdState(getActiveBookId());
-  }
-
-  async function syncToSupabase(userId: string) {
-    await syncBooksToSupabase(userId);
-    await syncAnalysisToSupabase(userId);
-    await syncGeneratedToSupabase(userId);
   }
 
   const activeBook = books.find((b) => b.id === activeBookIdState) || null;
