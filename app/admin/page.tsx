@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { Users, TrendingUp, CreditCard, Activity, Crown, XCircle, Loader2 } from "lucide-react";
@@ -13,7 +13,7 @@ export default function AdminPage() {
   const [toggling, setToggling] = useState<string | null>(null);
   const [error, setError] = useState("");
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useRef(createClient()).current;
 
   useEffect(() => {
     (async () => {
@@ -33,54 +33,49 @@ export default function AdminPage() {
       }
 
       setIsAdmin(true);
-
-      const res = await fetch("/api/admin/users");
-      const data = await res.json();
-
-      if (data.error) {
-        setError(data.error);
-      } else if (data.profiles) {
-        const total = data.profiles.length;
-        const proCount = data.profiles.filter((p: any) => p.subscription_status === "pro").length;
-        const todayGens = (data.usage || []).filter((l: any) =>
-          l.created_at?.startsWith(new Date().toISOString().slice(0, 10))
-        ).length;
-        setStats({ total, proCount, todayGens, totalGens: data.usage?.length || 0 });
-        setUsers(data.profiles);
-      }
-
+      await loadData();
       setLoading(false);
     })();
-  }, [router, supabase]);
+  }, []);
+
+  async function loadData() {
+    const res = await fetch("/api/admin/users");
+    const data = await res.json();
+
+    if (data.error) {
+      setError(data.error);
+      return;
+    }
+    if (!data.profiles) {
+      setError("No data returned from API");
+      return;
+    }
+
+    setError("");
+    const total = data.profiles.length;
+    const proCount = data.profiles.filter((p: any) => p.subscription_status === "pro").length;
+    const todayGens = (data.usage || []).filter((l: any) =>
+      l.created_at?.startsWith(new Date().toISOString().slice(0, 10))
+    ).length;
+    setStats({ total, proCount, todayGens, totalGens: data.usage?.length || 0 });
+    setUsers(data.profiles);
+  }
 
   async function togglePro(targetUserId: string, isCurrentlyPro: boolean) {
     setToggling(targetUserId);
     await fetch("/api/admin/set-pro", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        targetUserId,
-        action: isCurrentlyPro ? "remove" : "grant",
-      }),
+      body: JSON.stringify({ targetUserId, action: isCurrentlyPro ? "remove" : "grant" }),
     });
     setToggling(null);
-
-    const res = await fetch("/api/admin/users");
-    const data = await res.json();
-    if (data.profiles) {
-      const total = data.profiles.length;
-      const proCount = data.profiles.filter((p: any) => p.subscription_status === "pro").length;
-      const todayGens = (data.usage || []).filter((l: any) =>
-        l.created_at?.startsWith(new Date().toISOString().slice(0, 10))
-      ).length;
-      setStats({ total, proCount, todayGens, totalGens: data.usage?.length || 0 });
-      setUsers(data.profiles);
-    }
+    await loadData();
   }
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted">Loading...</div>;
   if (!isAdmin) return <div className="min-h-screen flex items-center justify-center text-red-400">Access denied. Admins only.</div>;
   if (error) return <div className="min-h-screen flex items-center justify-center text-red-400">{error}</div>;
+  if (!stats) return <div className="min-h-screen flex items-center justify-center text-muted">No data</div>;
 
   return (
     <div className="min-h-screen bg-dark p-6 max-w-6xl mx-auto">
@@ -94,7 +89,9 @@ export default function AdminPage() {
       </div>
 
       <div className="bg-card border border-border-subtle rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-border-subtle font-medium text-foreground text-sm">Users</div>
+        <div className="px-4 py-3 border-b border-border-subtle font-medium text-foreground text-sm">
+          Users ({users.length})
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
