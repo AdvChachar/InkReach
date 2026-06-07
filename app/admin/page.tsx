@@ -11,6 +11,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [error, setError] = useState("");
   const router = useRouter();
   const supabase = createClient();
 
@@ -36,7 +37,9 @@ export default function AdminPage() {
       const res = await fetch("/api/admin/users");
       const data = await res.json();
 
-      if (data.profiles) {
+      if (data.error) {
+        setError(data.error);
+      } else if (data.profiles) {
         const total = data.profiles.length;
         const proCount = data.profiles.filter((p: any) => p.subscription_status === "pro").length;
         const todayGens = (data.usage || []).filter((l: any) =>
@@ -77,6 +80,7 @@ export default function AdminPage() {
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted">Loading...</div>;
   if (!isAdmin) return <div className="min-h-screen flex items-center justify-center text-red-400">Access denied. Admins only.</div>;
+  if (error) return <div className="min-h-screen flex items-center justify-center text-red-400">{error}</div>;
 
   return (
     <div className="min-h-screen bg-dark p-6 max-w-6xl mx-auto">
