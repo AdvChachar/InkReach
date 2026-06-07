@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Unauthorized. Please sign in." }, { status: 401 });
   }
 
-  const rate = await checkRateLimit(user.id);
+  const rate = await checkRateLimit(user.id, 100, supabase);
   if (!rate.allowed) {
     return Response.json({ error: rate.error }, { status: 429 });
   }

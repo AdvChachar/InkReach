@@ -9,30 +9,32 @@ export default function AdminPage() {
   const [stats, setStats] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [toggling, setToggling] = useState<string | null>(null);
   const [error, setError] = useState("");
   const router = useRouter();
   const supabase = useRef(createClient()).current;
 
+  async function checkAccess() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.push("/login"); return false; }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile?.is_admin) {
+      router.push("/dashboard");
+      return false;
+    }
+    return true;
+  }
+
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/login"); return; }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (!profile?.is_admin) {
-        setIsAdmin(false);
-        setLoading(false);
-        return;
-      }
-
-      setIsAdmin(true);
+      const ok = await checkAccess();
+      if (!ok) return;
       await loadData();
       setLoading(false);
     })();
@@ -73,7 +75,6 @@ export default function AdminPage() {
   }
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted">Loading...</div>;
-  if (!isAdmin) return <div className="min-h-screen flex items-center justify-center text-red-400">Access denied. Admins only.</div>;
   if (error) return <div className="min-h-screen flex items-center justify-center text-red-400">{error}</div>;
   if (!stats) return <div className="min-h-screen flex items-center justify-center text-muted">No data</div>;
 

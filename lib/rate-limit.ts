@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getServiceSupabase } from "./supabase-admin";
 
 interface RateLimitResult {
   allowed: boolean;
@@ -7,24 +8,24 @@ interface RateLimitResult {
   error?: string;
 }
 
-export async function checkRateLimit(userId: string, proMax = 100): Promise<RateLimitResult> {
+async function createRateLimitClient() {
   const cookieStore = await cookies();
-  const supabase = createServerClient(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
+        getAll() { return cookieStore.getAll(); },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          );
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
         },
       },
     }
   );
+}
+
+export async function checkRateLimit(userId: string, proMax = 100, existingSupabase?: any): Promise<RateLimitResult> {
+  const supabase = existingSupabase || await createRateLimitClient();
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -35,7 +36,14 @@ export async function checkRateLimit(userId: string, proMax = 100): Promise<Rate
     .single();
 
   if (!profile) {
-    return { allowed: false, remaining: 0, error: "Profile not found" };
+    const admin = getServiceSupabase();
+    if (admin) {
+      await admin.from("profiles").upsert(
+        { id: userId, daily_gen_count: 1, last_gen_date: today, subscription_status: "free" },
+        { onConflict: "id" }
+      );
+    }
+    return { allowed: true, remaining: 4 };
   }
 
   const isPro = profile.subscription_status === "pro";

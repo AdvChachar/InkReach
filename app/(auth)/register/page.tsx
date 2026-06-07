@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -38,8 +39,8 @@ export default function RegisterPage() {
         setError(msg);
       }
     } else {
-      router.push("/dashboard");
-      router.refresh();
+      setError("");
+      setShowSuccess(true);
     }
     setLoading(false);
   };
@@ -50,6 +51,22 @@ export default function RegisterPage() {
       options: { redirectTo: `${window.location.origin}/callback` },
     });
   };
+
+  if (showSuccess) {
+    return (
+      <div className="w-full max-w-sm mx-auto p-6 text-center space-y-4">
+        <div className="text-4xl">✉️</div>
+        <h1 className="text-2xl font-bold text-foreground">Check Your Email</h1>
+        <p className="text-sm text-muted">
+          A confirmation link has been sent to <strong className="text-foreground">{email}</strong>.
+          Click the link to activate your account, then sign in.
+        </p>
+        <Link href="/login" className="inline-block bg-accent text-white font-semibold rounded-lg px-6 py-2.5 text-sm transition-all hover:bg-accent/90">
+          Go to Sign In
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-sm mx-auto p-6">

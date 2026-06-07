@@ -65,3 +65,12 @@ next-env.d.ts
 *.pfx
 
 .vercel
+
+# development screenshots & temp files
+tmp/
+fiverr-screenshot.png
+fiverr-snapshot.txt
+inkreach-final.png
+inkreach-new-design.png
+inkreach-screenshot.png
+inkreach-snapshot-new.txt

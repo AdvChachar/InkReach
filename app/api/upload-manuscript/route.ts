@@ -21,20 +21,13 @@ export async function POST(req: Request) {
     if (name.endsWith(".txt")) {
       text = await file.text();
     } else if (name.endsWith(".pdf")) {
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
-      const doc = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
-      const pages: string[] = [];
-      for (let i = 1; i <= doc.numPages; i++) {
-        const page = await doc.getPage(i);
-        const content = await page.getTextContent();
-        const pageText = content.items.map((item: any) => item.str).join(" ");
-        pages.push(pageText);
-      }
-      text = pages
-        .join("\n\n")
+      const { getDocumentProxy, extractText } = await import("unpdf");
+      const uint8 = new Uint8Array(await file.arrayBuffer());
+      const pdf = await getDocumentProxy(uint8);
+      const { text: raw } = await extractText(pdf, { mergePages: true });
+      text = raw
         .split("\n")
-        .map((l) => l.trim())
+        .map((l: string) => l.trim())
         .filter(Boolean)
         .join("\n");
     } else if (name.endsWith(".docx")) {
@@ -56,7 +49,9 @@ export async function POST(req: Request) {
     const preview = text.slice(0, 500);
 
     return Response.json({ text: text.slice(0, 100000), wordCount, preview, fileName: file.name });
-  } catch {
-    return Response.json({ error: "Failed to process file" }, { status: 500 });
+  } catch (e: unknown) {
+    const msg = (e as { message?: string })?.message || "Unknown error";
+    console.error("Upload error:", msg);
+    return Response.json({ error: `Failed to process file: ${msg}` }, { status: 500 });
   }
 }
