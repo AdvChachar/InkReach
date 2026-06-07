@@ -1,6 +1,33 @@
 import Groq from "groq-sdk";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+async function getUserStatus() {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { isPro: false, userId: null };
+  const { data: profile } = await supabase.from("profiles").select("subscription_status").eq("id", user.id).single();
+  return { isPro: profile?.subscription_status === "pro", userId: user.id };
+}
 
 const PROMPTS: Record<string, (analysis: any) => string> = {
   hooks: (a) => `You are an elite BookTok content strategist. Generate 5 TikTok/Reel video concepts based on this book analysis.
@@ -78,12 +105,26 @@ Setting Descriptions: ${(a.settingDescriptions || []).join(" | ")}
 For each prompt provide: title, cinematic description (50-80 words) featuring SPECIFIC characters and settings from this book, aspect ratio recommendation, and mood/tone.`,
 };
 
+const PAID_TYPES = new Set(["social", "video", "ad"]);
+
 export async function POST(req: Request) {
   try {
     const { analysis, types } = await req.json();
     if (!analysis) return Response.json({ error: "Analysis data required" }, { status: 400 });
 
-    const toGenerate = types || Object.keys(PROMPTS);
+    const { isPro, userId } = await getUserStatus();
+    if (userId) {
+      const rate = await checkRateLimit(userId);
+      if (!rate.allowed) {
+        return Response.json({ error: rate.error }, { status: 429 });
+      }
+    }
+    let toGenerate: string[] = types || Object.keys(PROMPTS);
+
+    if (!isPro) {
+      toGenerate = toGenerate.filter((t) => !PAID_TYPES.has(t));
+    }
+
     const results: { type: string; content: string; label: string }[] = [];
 
     for (const type of toGenerate) {

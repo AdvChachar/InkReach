@@ -8,6 +8,7 @@ import { trackEvent } from "@/lib/analytics";
 import { getGeneratedContent } from "@/lib/generated-content";
 import { getManuscriptAnalysis } from "@/lib/manuscript";
 import { OutputCard, DownloadButton } from "@/components/ui/output-card";
+import { Bot, Download } from "lucide-react";
 import {
   getScheduledPosts,
   addScheduledPost,
@@ -211,7 +212,7 @@ export function SocialPosts() {
                         {post.platform} • {new Date(post.scheduledAt).toLocaleString()}
                       </p>
                       {post.visualConcept && (
-                        <p className="text-xs text-muted italic mt-1">🎨 {post.visualConcept}</p>
+                        <p className="text-xs text-muted italic mt-1">{post.visualConcept}</p>
                       )}
                     </div>
                     <div className="flex gap-2 shrink-0">
@@ -279,7 +280,7 @@ export function SocialPosts() {
                       {caption === post.caption && <span className="text-xs text-accent">Selected</span>}
                     </div>
                     <p className="text-sm text-foreground mt-1 line-clamp-2">{post.caption}</p>
-                    {post.visual && <p className="text-xs text-muted mt-0.5">🎨 {post.visual}</p>}
+                    {post.visual && <p className="text-xs text-muted mt-0.5">{post.visual}</p>}
                   </button>
                 ))}
               </div>
@@ -322,9 +323,9 @@ export function SocialPosts() {
               <button
                 onClick={handleAiGenerate}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-4 py-2 transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-40"
+                className="w-full bg-accent text-white font-semibold rounded-lg px-4 py-2 transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-40"
               >
-                {loading ? "⏳ Generating..." : "🤖 AI Generate Post"}
+                {loading ? "⏳ Generating..." : <><Bot className="w-4 h-4 inline-block mr-1.5" />AI Generate Post</>}
               </button>
             </div>
           </div>
@@ -369,10 +370,10 @@ export function SocialPosts() {
 
           <div className="space-y-4">
             <label className="text-sm text-muted font-medium">Preview</label>
-            <div className="flex justify-center">
+            <div className="flex justify-center max-w-full overflow-x-auto">
               <div
                 ref={previewRef}
-                className="relative overflow-hidden rounded-xl shadow-2xl"
+                className="relative shrink-0 overflow-hidden rounded-xl shadow-2xl"
                 style={{
                   width: current.w,
                   height: current.h,
@@ -399,7 +400,7 @@ export function SocialPosts() {
                   <div className="text-right">
                     {visualConcept && (
                       <p className="text-[9px] text-muted italic leading-tight">
-                        🎨 {visualConcept}
+                        {visualConcept}
                       </p>
                     )}
                     <p className="text-[8px] text-muted mt-1">
@@ -414,9 +415,9 @@ export function SocialPosts() {
               <button
                 onClick={handleDownload}
                 disabled={!caption}
-                className="bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-4 py-2 transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-40"
+                className="bg-accent text-white font-semibold rounded-lg px-4 py-2 transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-40"
               >
-                📥 Download {current.label} PNG
+                <Download className="w-4 h-4 inline-block mr-1.5" />Download {current.label} PNG
               </button>
             </div>
           </div>
@@ -424,7 +425,7 @@ export function SocialPosts() {
           {caption && (
             <div className="border border-accent-dim rounded-xl overflow-hidden">
               <div className="px-5 py-3 bg-card">
-                <p className="text-sm font-medium text-foreground mb-3">📅 Schedule This Post</p>
+                <p className="text-sm font-medium text-foreground mb-3">Schedule This Post</p>
                 <div className="flex gap-2 items-end">
                   <div className="space-y-1">
                     <label className="text-xs text-muted">Date</label>
@@ -460,7 +461,7 @@ export function SocialPosts() {
             <div className="space-y-2">
               <label className="text-sm text-muted font-medium">AI Generated Content</label>
               <OutputCard>{aiOutput}</OutputCard>
-              <DownloadButton content={aiOutput} filename={`social-posts-${platform}.txt`} label="📥 Download AI Content" />
+              <DownloadButton content={aiOutput} filename={`social-posts-${platform}.txt`} label="Download AI Content" />
             </div>
           )}
         </>

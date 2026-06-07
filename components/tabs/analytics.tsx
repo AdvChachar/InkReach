@@ -36,7 +36,7 @@ export function Analytics() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">📊 Analytics</h2>
+          <h2 className="text-xl font-bold text-foreground">Analytics</h2>
           <p className="text-sm text-muted">Track usage and content generation stats.</p>
         </div>
         <div className="flex gap-2">
@@ -55,7 +55,7 @@ export function Analytics() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-card border border-accent-dim rounded-xl p-4">
           <p className="text-2xl font-bold text-accent">{summary.total}</p>
           <p className="text-xs text-muted">Total Events</p>

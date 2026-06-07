@@ -1,4 +1,12 @@
+import { createServerSupabase } from "@/lib/supabase-server";
+
 export async function POST(req: Request) {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return Response.json({ error: "Unauthorized. Please sign in." }, { status: 401 });
+  }
+
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;

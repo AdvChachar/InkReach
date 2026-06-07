@@ -5,6 +5,7 @@ import { APP_CONFIG } from "@/config/client";
 import { useBook } from "@/context/book-context";
 import { trackEvent } from "@/lib/analytics";
 import { OutputCard, DownloadButton } from "@/components/ui/output-card";
+import { RefreshCw, Crosshair } from "lucide-react";
 import { getGeneratedContent } from "@/lib/generated-content";
 import { getManuscriptAnalysis } from "@/lib/manuscript";
 import {
@@ -21,7 +22,7 @@ const STATUS_FLOW: { value: OutreachStatus; label: string; color: string }[] = [
   { value: "draft", label: "Draft", color: "text-muted" },
   { value: "sent", label: "Sent", color: "text-blue-400" },
   { value: "opened", label: "Opened", color: "text-yellow-400" },
-  { value: "replied", label: "Replied", color: "text-purple-400" },
+  { value: "replied", label: "Replied", color: "text-accent" },
   { value: "booked", label: "Booked", color: "text-green-400" },
   { value: "declined", label: "Declined", color: "text-red-400" },
 ];
@@ -122,7 +123,7 @@ export function InfluencerPitcher() {
 
       {(analysis?.keyQuotes || []).length > 0 && (
         <div className="bg-card border border-accent-dim rounded-lg p-4 space-y-2">
-          <label className="text-sm text-muted font-medium">📝 Key Quotes from Your Book (Use in pitches)</label>
+          <label className="text-sm text-muted font-medium">Key Quotes from Your Book (Use in pitches)</label>
           <div className="space-y-2">
             {analysis!.keyQuotes.slice(0, 3).map((q, i) => (
               <div key={i} className="bg-card/50 rounded-lg p-2 text-sm border border-accent-dim">
@@ -132,7 +133,7 @@ export function InfluencerPitcher() {
                   onClick={() => navigator.clipboard.writeText(q.quote)}
                   className="text-xs text-accent hover:underline mt-1 inline-block"
                 >
-                  📋 Copy quote
+                  Copy quote
                 </button>
               </div>
             ))}
@@ -161,7 +162,7 @@ export function InfluencerPitcher() {
 
       {showTracker ? (
         <div className="space-y-4">
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {STATUS_FLOW.map((s) => (
               <div key={s.value} className="bg-card border border-accent-dim rounded-lg p-3 text-center">
                 <p className={`text-lg font-bold ${s.color}`}>
@@ -213,7 +214,7 @@ export function InfluencerPitcher() {
                         Follow-up: {new Date(c.followUpAt).toLocaleDateString()}
                       </span>
                     )}
-                    {c.isLarge && <span className="text-purple-400">Large (100k+)</span>}
+                    {c.isLarge && <span className="text-accent">Large (100k+)</span>}
                     <button
                       onClick={() => {
                         const updated = removeOutreachContact(c.id);
@@ -310,9 +311,9 @@ export function InfluencerPitcher() {
             <button
               onClick={handleGenerate}
               disabled={loading}
-              className="bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-4 py-2 transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-40 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
+              className="bg-accent text-white font-semibold rounded-lg px-4 py-2 transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {loading ? "⏳ Generating..." : output ? "🔄 Regenerate Pitch" : "🎯 Generate Pitch"}
+              {loading ? "⏳ Generating..." : output ? <><RefreshCw className="w-4 h-4 inline-block mr-1.5" />Regenerate Pitch</> : <><Crosshair className="w-4 h-4 inline-block mr-1.5" />Generate Pitch</>}
             </button>
 
             {influencerName && (
@@ -327,7 +328,7 @@ export function InfluencerPitcher() {
 
           {influencerName && (
             <div className="bg-card border border-accent-dim rounded-lg p-4 space-y-3">
-              <p className="text-sm font-medium text-foreground">📋 Outreach Details</p>
+              <p className="text-sm font-medium text-foreground">Outreach Details</p>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs text-muted">Follow-up Date (optional)</label>
@@ -354,7 +355,7 @@ export function InfluencerPitcher() {
           {output && (
             <>
               <OutputCard>{output}</OutputCard>
-              <DownloadButton content={output} filename="influencer_pitch.txt" label="📥 Download Pitch" />
+              <DownloadButton content={output} filename="influencer_pitch.txt" label="Download Pitch" />
               <p className="text-xs text-foreground italic">
                 *Tip: Personalize [INFLUENCER NAME] before sending. Send during 6-9pm their local time for best open rates.
               </p>

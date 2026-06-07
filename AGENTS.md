@@ -1,3 +1,13 @@
+<!-- BEGIN:global-rules -->
+# 🛑 GLOBAL RULE: No Git commits/pushes or Vercel deployments unless the user explicitly says so. Always ask first.
+# 🛑 GLOBAL RULE: Never delete any API keys unless explicitly told to. Swapping/updating keys when provided and asked to do so is allowed.
+# 🛑 GLOBAL RULE: Do not delete or modify files (especially source code) unless explicitly asked.
+# 🛑 GLOBAL RULE: Do not install/uninstall npm packages without asking first.
+# 🛑 GLOBAL RULE: Do not modify .env files or config files containing secrets without asking.
+# 🛑 GLOBAL RULE: Do not modify database schemas or production data without asking.
+# 🛑 GLOBAL RULE: Never commit, push, or deploy anything before double-checking security audits and protocols. If everything is secure, ask for permission to commit, push, and deploy.
+<!-- END:global-rules -->
+
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 

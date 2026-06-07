@@ -12,12 +12,12 @@ import {
 import { useBook } from "@/context/book-context";
 import { getGeneratedContent, type GeneratedItem } from "@/lib/generated-content";
 
-const PLATFORMS: { id: AdPlatform; label: string; icon: string }[] = [
-  { id: "facebook", label: "Facebook Ads", icon: "📘" },
-  { id: "instagram", label: "Instagram Ads", icon: "📸" },
-  { id: "amazon", label: "Amazon Ads", icon: "📦" },
-  { id: "bookbub", label: "BookBub", icon: "📚" },
-  { id: "tiktok", label: "TikTok Ads", icon: "🎵" },
+const PLATFORMS: { id: AdPlatform; label: string }[] = [
+  { id: "facebook", label: "Facebook Ads" },
+  { id: "instagram", label: "Instagram Ads" },
+  { id: "amazon", label: "Amazon Ads" },
+  { id: "bookbub", label: "BookBub" },
+  { id: "tiktok", label: "TikTok Ads" },
 ];
 
 export function Ads() {
@@ -88,7 +88,7 @@ export function Ads() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">📢 Ad Campaigns</h2>
+          <h2 className="text-xl font-bold text-foreground">Ad Campaigns</h2>
           <p className="text-sm text-muted">
             {parsedAds.length > 0
               ? "Pick a pre-generated ad variation and set your budget."
@@ -98,7 +98,7 @@ export function Ads() {
         {parsedAds.length > 0 && (
           <button
             onClick={() => { setShowForm(true); setShowPicker(true); }}
-            className="bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-4 py-2 text-sm hover:-translate-y-0.5 hover:shadow-lg transition-all"
+            className="bg-accent text-white font-semibold rounded-lg px-4 py-2 text-sm transition-all hover:bg-accent/90 active:scale-[0.98]"
           >
             + New from Pre-Generated
           </button>
@@ -147,7 +147,7 @@ export function Ads() {
                   onClick={() => setPlatform(p.id)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${platform === p.id ? "bg-accent text-white" : "bg-card border border-accent-dim text-muted hover:text-accent"}`}
                 >
-                  {p.icon} {p.label}
+                  {p.label}
                 </button>
               ))}
             </div>
@@ -225,7 +225,7 @@ export function Ads() {
             <div key={c.id} className="bg-card border border-accent-dim rounded-lg p-4 space-y-2">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                  <span>{PLATFORMS.find((p) => p.id === c.platform)?.icon}</span>
+                  <span>{PLATFORMS.find((p) => p.id === c.platform)?.label}</span>
                   <span className="text-sm font-medium text-foreground">{c.title}</span>
                 </div>
                 <select

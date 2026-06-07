@@ -42,16 +42,16 @@ export function PricingModal({ open, onClose, onUnlock }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-card border border-accent-dim rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-card border border-border-subtle rounded-xl p-4 sm:p-8 max-w-md w-full mx-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
         <div className="text-center mb-6">
           <div className="text-4xl mb-3">⭐</div>
-          <h2 className="text-2xl font-bold text-accent">Unlock Premium Features</h2>
+          <h2 className="text-2xl font-bold text-foreground">Unlock Premium Features</h2>
           <p className="text-foreground mt-2 text-sm">
             3D Mockups, Social Posts &amp; Video Generator
           </p>
         </div>
 
-        <div className="bg-accent/10 border border-accent-dim rounded-xl p-5 text-center mb-6">
+        <div className="bg-accent/5 border border-border-subtle rounded-xl p-5 text-center mb-6">
           <span className="text-3xl font-bold text-accent">${APP_CONFIG.subscriptionPrice}</span>
           <span className="text-foreground"> /month</span>
           <ul className="text-sm text-foreground mt-3 space-y-1.5 text-left">
@@ -71,12 +71,12 @@ export function PricingModal({ open, onClose, onUnlock }: Props) {
                 onChange={(e) => setKey(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") handleUnlock(); }}
                 placeholder="License key"
-                className="flex-1 bg-dark text-foreground border border-accent-dim rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent placeholder:text-muted"
+                className="flex-1 bg-dark text-foreground border border-border-subtle rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent placeholder:text-muted"
               />
               <button
                 onClick={handleUnlock}
                 disabled={checking || !key.trim()}
-                className="bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-4 py-2 text-sm transition-all hover:-translate-y-0.5 disabled:opacity-40"
+                className="bg-accent text-white font-semibold rounded-lg px-4 py-2 text-sm transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-40"
               >
                 {checking ? "..." : "Unlock"}
               </button>
@@ -93,7 +93,7 @@ export function PricingModal({ open, onClose, onUnlock }: Props) {
                 href={APP_CONFIG.checkoutUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-4 py-3 text-center text-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                className="block w-full bg-accent text-white font-semibold rounded-lg px-4 py-3 text-center text-sm transition-all hover:bg-accent/90 active:scale-[0.98]"
               >
                 Subscribe ${APP_CONFIG.subscriptionPrice}/month
               </a>

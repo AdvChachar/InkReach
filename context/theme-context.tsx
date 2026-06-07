@@ -9,16 +9,28 @@ interface ThemeContextType {
   toggle: () => void;
 }
 
+const STORAGE_KEY = "inkreach_theme";
+
 const ThemeContext = createContext<ThemeContextType>({ theme: "dark", toggle: () => {} });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const initial: Theme = saved === "dark" ? "dark" : "light";
+    setTheme(initial);
+    document.documentElement.setAttribute("data-theme", initial);
     setMounted(true);
-    document.documentElement.setAttribute("data-theme", theme);
-  }, [theme]);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem(STORAGE_KEY, theme);
+    }
+  }, [theme, mounted]);
 
   const toggle = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 

@@ -1,4 +1,17 @@
+import { requireSubscription } from "@/lib/check-subscription";
+import { checkRateLimit } from "@/lib/rate-limit";
+
 export async function POST(req: Request) {
+  const sub = await requireSubscription();
+  if (!sub.allowed) {
+    return Response.json({ error: sub.error }, { status: sub.status });
+  }
+
+  const rate = await checkRateLimit(sub.user!.id);
+  if (!rate.allowed) {
+    return Response.json({ error: rate.error }, { status: 429 });
+  }
+
   const { prompt, aspectRatio, duration } = await req.json();
 
   if (!prompt) {

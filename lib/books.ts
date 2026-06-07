@@ -1,5 +1,4 @@
 import { APP_CONFIG } from "@/config/client";
-import type { ManuscriptAnalysis } from "./manuscript";
 
 export type ManuscriptStatus = "none" | "uploading" | "analyzing" | "ready";
 
@@ -94,7 +93,72 @@ export function getEffectiveBookConfig(book?: BookConfig | null) {
 
 export function initDefaultBook(): BookConfig[] {
   const books = getBooks();
-  if (books.length === 0) return addBook();
+  if (books.length === 0) return [];
   if (!getActiveBookId()) setActiveBookId(books[0].id);
   return books;
+}
+
+export async function syncBooksToSupabase(userId: string) {
+  const { createClient } = await import("./supabase");
+  const supabase = createClient();
+  const books = getBooks();
+  for (const b of books) {
+    const { data: existing } = await supabase
+      .from("books")
+      .select("id")
+      .eq("id", b.id)
+      .maybeSingle();
+    if (!existing) {
+      await supabase.from("books").insert({
+        id: b.id,
+        user_id: userId,
+        title: b.title,
+        author_name: b.authorName,
+        book_cover_url: b.bookCoverUrl,
+        book_blurb: b.bookBlurb,
+        book_genre: b.bookGenre,
+        protagonist_name: b.protagonistName,
+        protagonist_persona: b.protagonistPersona,
+        book_tropes: b.bookTropes,
+        target_reader: b.targetReader,
+        marketing_tone: b.marketingTone,
+        manuscript_status: b.manuscriptStatus || "none",
+      });
+    }
+  }
+}
+
+export async function syncBooksFromSupabase(userId: string) {
+  const { createClient } = await import("./supabase");
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("books")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+  if (data && data.length > 0) {
+    const existing = getBooks();
+    const existingIds = new Set(existing.map((b) => b.id));
+    for (const row of data) {
+      if (!existingIds.has(row.id)) {
+        existing.push({
+          id: row.id as string,
+          title: (row.title as string) || defaults.title,
+          authorName: (row.author_name as string) || defaults.authorName,
+          bookCoverUrl: (row.book_cover_url as string) || defaults.bookCoverUrl,
+          bookBlurb: (row.book_blurb as string) || defaults.bookBlurb,
+          bookGenre: (row.book_genre as string) || defaults.bookGenre,
+          protagonistName: (row.protagonist_name as string) || defaults.protagonistName,
+          protagonistPersona: (row.protagonist_persona as string) || defaults.protagonistPersona,
+          bookTropes: (row.book_tropes as string) || defaults.bookTropes,
+          targetReader: (row.target_reader as string) || defaults.targetReader,
+          marketingTone: (row.marketing_tone as string) || defaults.marketingTone,
+          createdAt: (row.created_at as string) || new Date().toISOString(),
+          manuscriptStatus: (row.manuscript_status as ManuscriptStatus) || undefined,
+        });
+      }
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+    if (!getActiveBookId() && existing.length > 0) setActiveBookId(existing[0].id);
+  }
 }

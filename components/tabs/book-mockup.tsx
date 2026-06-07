@@ -5,14 +5,15 @@ import { toPng } from "html-to-image";
 import { useBook } from "@/context/book-context";
 import { trackEvent } from "@/lib/analytics";
 import { getManuscriptAnalysis } from "@/lib/manuscript";
+import { Download } from "lucide-react";
 
 type ViewAngle = "front" | "angled-right" | "angled-left" | "open";
 
 const VIEW_LABELS: Record<ViewAngle, string> = {
-  "front": "📖 Front View",
-  "angled-right": "📐 Angled Right",
-  "angled-left": "📐 Angled Left",
-  "open": "📖 Open Book",
+  "front": "Front View",
+  "angled-right": "Angled Right",
+  "angled-left": "Angled Left",
+  "open": "Open Book",
 };
 
 const COLORS = [
@@ -111,7 +112,7 @@ export function BookMockup() {
       )}
 
       <div className="bg-card border border-accent-dim rounded-xl p-5 space-y-3">
-        <label className="text-sm text-muted font-medium">🎨 AI Generate Book Cover / Scene</label>
+        <label className="text-sm text-muted font-medium">AI Generate Book Cover / Scene</label>
         <div className="flex gap-2">
           <input
             value={aiPrompt}
@@ -123,7 +124,7 @@ export function BookMockup() {
           <button
             onClick={handleAiGenerate}
             disabled={aiLoading || !aiPrompt.trim()}
-            className="bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-4 py-2 text-sm transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-40 whitespace-nowrap"
+            className="bg-accent text-white font-semibold rounded-lg px-4 py-2 text-sm transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-40 whitespace-nowrap"
           >
             {aiLoading ? "⏳ Generating..." : "✨ Generate"}
           </button>
@@ -243,7 +244,7 @@ export function BookMockup() {
         <div className="space-y-4">
           <div
             ref={previewRef}
-            className="flex items-center justify-center rounded-xl overflow-hidden min-h-[320px]"
+            className="flex items-center justify-center rounded-xl overflow-x-auto max-w-full min-h-[320px]"
             style={{ backgroundColor: bgColor.bg }}
           >
             {angle === "front" && (
@@ -371,9 +372,9 @@ export function BookMockup() {
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className="bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-6 py-2.5 transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-40"
+            className="bg-accent text-white font-semibold rounded-lg px-6 py-2.5 transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-40"
           >
-            {downloading ? "⏳ Downloading..." : "📥 Download Mockup PNG"}
+            {downloading ? "⏳ Downloading..." : <><Download className="w-4 h-4 inline-block mr-1.5" />Download Mockup PNG</>}
           </button>
         </div>
       )}

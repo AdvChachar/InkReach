@@ -10,8 +10,13 @@ import {
   updateBook,
   removeBook,
   initDefaultBook,
+  syncBooksFromSupabase,
+  syncBooksToSupabase,
   type BookConfig,
 } from "@/lib/books";
+import { syncAnalysisFromSupabase, syncAnalysisToSupabase } from "@/lib/manuscript";
+import { syncGeneratedFromSupabase, syncGeneratedToSupabase } from "@/lib/generated-content";
+import { createClient } from "@/lib/supabase";
 
 interface BookContextValue {
   books: BookConfig[];
@@ -21,21 +26,60 @@ interface BookContextValue {
   addNewBook: (overrides?: Partial<Omit<BookConfig, "id" | "createdAt">>) => void;
   updateCurrentBook: (updates: Partial<Omit<BookConfig, "id" | "createdAt">>) => void;
   deleteBook: (id: string) => void;
+  user: { id: string; email?: string } | null;
+  signOut: () => Promise<void>;
 }
 
 const BookContext = createContext<BookContextValue | null>(null);
 
 export function BookProvider({ children }: { children: ReactNode }) {
   const [books, setBooks] = useState<BookConfig[]>([]);
-  const [activeBookId, setActiveBookIdState] = useState<string | null>(null);
+  const [activeBookIdState, setActiveBookIdState] = useState<string | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
 
   useEffect(() => {
     const existing = initDefaultBook();
     setBooks(existing);
     setActiveBookIdState(getActiveBookId());
+
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        setUser({ id: data.user.id, email: data.user.email });
+        syncFromSupabase(data.user.id);
+      }
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({ id: session.user.id, email: session.user.email });
+        syncFromSupabase(session.user.id);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => listener?.subscription.unsubscribe();
   }, []);
 
-  const activeBook = books.find((b) => b.id === activeBookId) || null;
+  async function syncFromSupabase(userId: string) {
+    await syncBooksToSupabase(userId);
+    await syncAnalysisToSupabase(userId);
+    await syncGeneratedToSupabase(userId);
+    await syncBooksFromSupabase(userId);
+    await syncAnalysisFromSupabase(userId);
+    await syncGeneratedFromSupabase(userId);
+    setBooks(getBooks());
+    setActiveBookIdState(getActiveBookId());
+  }
+
+  async function syncToSupabase(userId: string) {
+    await syncBooksToSupabase(userId);
+    await syncAnalysisToSupabase(userId);
+    await syncGeneratedToSupabase(userId);
+  }
+
+  const activeBook = books.find((b) => b.id === activeBookIdState) || null;
 
   const switchBook = useCallback((id: string) => {
     setActiveBookId(id);
@@ -49,10 +93,10 @@ export function BookProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateCurrentBook = useCallback((updates: Partial<Omit<BookConfig, "id" | "createdAt">>) => {
-    if (!activeBookId) return;
-    const updated = updateBook(activeBookId, updates);
+    if (!activeBookIdState) return;
+    const updated = updateBook(activeBookIdState, updates);
     setBooks(updated);
-  }, [activeBookId]);
+  }, [activeBookIdState]);
 
   const deleteBook = useCallback((id: string) => {
     const updated = removeBook(id);
@@ -60,8 +104,14 @@ export function BookProvider({ children }: { children: ReactNode }) {
     setActiveBookIdState(getActiveBookId());
   }, []);
 
+  const signOut = useCallback(async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setUser(null);
+  }, []);
+
   return (
-    <BookContext.Provider value={{ books, activeBook, activeBookId, switchBook, addNewBook, updateCurrentBook, deleteBook }}>
+    <BookContext.Provider value={{ books, activeBook, activeBookId: activeBookIdState, switchBook, addNewBook, updateCurrentBook, deleteBook, user, signOut }}>
       {children}
     </BookContext.Provider>
   );

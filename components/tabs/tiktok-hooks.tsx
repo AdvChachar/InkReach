@@ -6,6 +6,7 @@ import { useBook } from "@/context/book-context";
 import { trackEvent } from "@/lib/analytics";
 import { getGeneratedContent } from "@/lib/generated-content";
 import { getManuscriptAnalysis } from "@/lib/manuscript";
+import { RefreshCw, Sparkles, Check, Copy, FileText } from "lucide-react";
 
 const HOOK_EMOJIS = ["🔥", "💥", "⚡", "🎯", "✨", "🚀", "💡", "🎬"];
 
@@ -15,13 +16,13 @@ interface HookItem {
 }
 
 function parseHooks(text: string): HookItem[] {
-  const parts = text.split(/🎬 CONCEPT \[\d+\]:/).filter(Boolean);
+  const parts = text.split(/CONCEPT \[\d+\]:/).filter(Boolean);
   if (parts.length === 0) {
     return [{ index: 1, content: text.trim() }];
   }
   return parts.map((p, i) => ({
     index: i + 1,
-    content: `🎬 CONCEPT [${i + 1}]:${p.trim()}`,
+    content: `CONCEPT [${i + 1}]:${p.trim()}`,
   }));
 }
 
@@ -211,7 +212,7 @@ export function TikTokHooks() {
       <button
         onClick={handleGenerate}
         disabled={loading}
-        className="bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-4 py-2 transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-40 disabled:hover:translate-y-0 disabled:cursor-not-allowed inline-flex items-center gap-2"
+        className="bg-accent text-white font-semibold rounded-lg px-4 py-2 transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-2"
       >
         {loading ? (
           <>
@@ -221,7 +222,7 @@ export function TikTokHooks() {
             </svg>
             Generating...
           </>
-        ) : hooks.length > 0 ? "🔄 Regenerate Hooks" : "🚀 Generate Hooks"}
+        ) : hooks.length > 0 ? <><RefreshCw className="w-4 h-4 inline-block mr-1.5" />Regenerate Hooks</> : <><Sparkles className="w-4 h-4 inline-block mr-1.5" />Generate Hooks</>}
       </button>
 
       {loading && (
@@ -262,7 +263,7 @@ export function TikTokHooks() {
                   onClick={() => copyHook(hook.content, hook.index)}
                   className="text-xs text-muted hover:text-accent transition-colors px-3 py-1 rounded-md border border-accent-dim hover:border-accent"
                 >
-                  {copiedIndex === hook.index ? "✅ Copied!" : "📋 Copy"}
+                  {copiedIndex === hook.index ? <><Check className="w-3.5 h-3.5 inline-block mr-1" />Copied!</> : <><Copy className="w-3.5 h-3.5 inline-block mr-1" />Copy</>}
                 </button>
               </div>
               <div className="text-foreground text-sm whitespace-pre-wrap leading-relaxed">
@@ -274,7 +275,7 @@ export function TikTokHooks() {
           <div className="flex gap-3 pt-2 flex-wrap">
             <button
               onClick={downloadPDF}
-              className="bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-5 py-2.5 transition-all hover:-translate-y-0.5 hover:shadow-lg inline-flex items-center gap-2 text-sm"
+              className="bg-accent text-white font-semibold rounded-lg px-5 py-2.5 transition-all hover:bg-accent/90 active:scale-[0.98] inline-flex items-center gap-2 text-sm"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               Download All as PDF
@@ -283,7 +284,7 @@ export function TikTokHooks() {
               onClick={downloadAll}
               className="bg-card text-foreground font-medium rounded-lg px-5 py-2.5 transition-all hover:-translate-y-0.5 hover:shadow-lg border border-accent-dim hover:border-accent inline-flex items-center gap-2 text-sm"
             >
-              📄 Download as TXT
+              <FileText className="w-4 h-4 inline-block mr-1.5" />Download as TXT
             </button>
           </div>
         </div>

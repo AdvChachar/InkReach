@@ -1,8 +1,20 @@
 import Groq from "groq-sdk";
+import { requireSubscription } from "@/lib/check-subscription";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: Request) {
+  const sub = await requireSubscription();
+  if (!sub.allowed) {
+    return Response.json({ error: sub.error }, { status: sub.status });
+  }
+
+  const rate = await checkRateLimit(sub.user!.id);
+  if (!rate.allowed) {
+    return Response.json({ error: rate.error }, { status: 429 });
+  }
+
   const { bookTitle, authorName, genre, bookBlurb, platform, postStyle } = await req.json();
 
   const prompt = `You are a social media marketing expert for books.

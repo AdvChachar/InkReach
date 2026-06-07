@@ -1,3 +1,6 @@
+import { requireSubscription } from "@/lib/check-subscription";
+import { checkRateLimit } from "@/lib/rate-limit";
+
 async function tryGemini(prompt: string, apiKey: string) {
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
@@ -72,6 +75,16 @@ async function tryStability(prompt: string, apiKey: string) {
 }
 
 export async function POST(req: Request) {
+  const sub = await requireSubscription();
+  if (!sub.allowed) {
+    return Response.json({ error: sub.error }, { status: sub.status });
+  }
+
+  const rate = await checkRateLimit(sub.user!.id);
+  if (!rate.allowed) {
+    return Response.json({ error: rate.error }, { status: 429 });
+  }
+
   const { prompt } = await req.json();
 
   if (!prompt) {

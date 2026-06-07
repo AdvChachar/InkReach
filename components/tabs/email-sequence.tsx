@@ -5,6 +5,7 @@ import { APP_CONFIG } from "@/config/client";
 import { useBook } from "@/context/book-context";
 import { trackEvent } from "@/lib/analytics";
 import { DownloadButton } from "@/components/ui/output-card";
+import { RefreshCw, Mail, Users, Loader2, Send, Rocket } from "lucide-react";
 import { getGeneratedContent } from "@/lib/generated-content";
 import { getManuscriptAnalysis } from "@/lib/manuscript";
 import { getContacts, addContacts, addContact, removeContact, parseCSV, type Contact } from "@/lib/contacts";
@@ -221,9 +222,9 @@ export function EmailSequence() {
       <button
         onClick={handleGenerate}
         disabled={loading}
-        className="bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-4 py-2 transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-40 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
+        className="bg-accent text-white font-semibold rounded-lg px-4 py-2 transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        {loading ? "⏳ Generating..." : output ? "🔄 Regenerate Email Sequence" : "📧 Generate Email Sequence"}
+        {loading ? "⏳ Generating..." : output ? <><RefreshCw className="w-4 h-4 inline-block mr-1.5" />Regenerate Email Sequence</> : <><Mail className="w-4 h-4 inline-block mr-1.5" />Generate Email Sequence</>}
       </button>
 
       {output && (
@@ -265,7 +266,7 @@ export function EmailSequence() {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <DownloadButton content={output} filename="email_sequence.txt" label="📥 Download TXT" />
+            <DownloadButton content={output} filename="email_sequence.txt" label="Download TXT" />
           </div>
 
           <div className="border border-accent-dim rounded-xl overflow-hidden">
@@ -273,8 +274,8 @@ export function EmailSequence() {
               onClick={() => setShowContacts(!showContacts)}
               className="w-full px-5 py-3 flex items-center justify-between bg-card hover:bg-accent/5 transition-colors"
             >
-              <span className="font-medium text-foreground">
-                📋 Contacts ({contacts.length})
+              <span className="font-medium text-foreground inline-flex items-center gap-1.5">
+                <Users className="w-4 h-4" /> Contacts ({contacts.length})
               </span>
               <span className="text-muted text-sm">{showContacts ? "▲" : "▼"}</span>
             </button>
@@ -350,16 +351,16 @@ export function EmailSequence() {
               disabled={testLoading || !testEmail.includes("@") || editableEmails.length === 0}
               className="bg-card border border-accent text-accent font-medium rounded-lg px-4 py-2 text-sm hover:bg-accent/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              {testLoading ? "⏳ Sending..." : "📬 Send Test"}
+              {testLoading ? <><Loader2 className="w-4 h-4 inline-block mr-1.5 animate-spin" />Sending...</> : <><Send className="w-4 h-4 inline-block mr-1.5" />Send Test</>}
             </button>
             <button
               onClick={handleSendToList}
               disabled={sendLoading || contacts.length === 0 || editableEmails.length === 0}
-              className="bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-4 py-2 text-sm hover:-translate-y-0.5 hover:shadow-lg transition-all disabled:opacity-40 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
+              className="bg-accent text-white font-semibold rounded-lg px-4 py-2 text-sm transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {sendLoading
-                ? "⏳ Sending..."
-                : `🚀 Send to ${contacts.length} Contact${contacts.length !== 1 ? "s" : ""}`
+                ? <><Loader2 className="w-4 h-4 inline-block mr-1.5 animate-spin" />Sending...</>
+                : <><Rocket className="w-4 h-4 inline-block mr-1.5" />Send to {contacts.length} Contact{contacts.length !== 1 ? "s" : ""}</>
               }
             </button>
           </div>

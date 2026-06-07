@@ -6,6 +6,7 @@ import { useBook } from "@/context/book-context";
 import { trackEvent } from "@/lib/analytics";
 import { getGeneratedContent } from "@/lib/generated-content";
 import { getManuscriptAnalysis } from "@/lib/manuscript";
+import { Clapperboard, Download, Lightbulb } from "lucide-react";
 
 const ASPECT_RATIOS = [
   { id: "16:9", label: "Landscape 16:9" },
@@ -170,9 +171,9 @@ export function VideoGenerator() {
       <button
         onClick={handleGenerate}
         disabled={loading || !prompt.trim()}
-        className="bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-6 py-2.5 transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-40"
+        className="bg-accent text-white font-semibold rounded-lg px-6 py-2.5 transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-40"
       >
-        {loading ? "⏳ Generating video (this takes ~1-2 min)..." : "🎬 Generate Video"}
+        {loading ? "⏳ Generating video (this takes ~1-2 min)..." : <><Clapperboard className="w-4 h-4 inline-block mr-1.5" />Generate Video</>}
       </button>
 
       {error && (
@@ -194,15 +195,15 @@ export function VideoGenerator() {
             href={videoUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-4 py-2 transition-all hover:-translate-y-0.5 hover:shadow-lg"
+            className="inline-block bg-accent text-white font-semibold rounded-lg px-4 py-2 transition-all hover:bg-accent/90 active:scale-[0.98]"
           >
-            📥 Download Video
+            <Download className="w-4 h-4 inline-block mr-1.5" />Download Video
           </a>
         </div>
       )}
 
       <div className="bg-card border border-accent-dim rounded-xl p-4 text-sm text-foreground">
-        💡 <strong className="text-accent">Tip:</strong> Use cinematic descriptions for best results.
+        <Lightbulb className="w-4 h-4 inline-block mr-1.5 text-accent" /> <strong className="text-accent">Tip:</strong> Use cinematic descriptions for best results.
         Mention lighting, camera movement, and mood.
       </div>
     </div>

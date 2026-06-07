@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from "react";
+import { Download } from "lucide-react";
 
 export function OutputCard({ children }: { children: ReactNode }) {
   return <div className="output-card">{children}</div>;
@@ -25,9 +26,9 @@ export function DownloadButton({ content, filename, label }: {
     <button
       onClick={handleDownload}
       disabled={!content}
-      className="mt-4 bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-4 py-2 transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-40 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
+      className="mt-4 bg-accent text-white font-semibold rounded-lg px-4 py-2 transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
     >
-      {label}
+      <Download className="w-4 h-4 inline-block mr-1.5" />{label}
     </button>
   );
 }

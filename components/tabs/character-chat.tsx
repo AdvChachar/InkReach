@@ -6,6 +6,7 @@ import { useBook } from "@/context/book-context";
 import { trackEvent } from "@/lib/analytics";
 import { getManuscriptAnalysis } from "@/lib/manuscript";
 import { MessageBubble } from "@/components/ui/message-bubble";
+import { User, Trash2, Lightbulb } from "lucide-react";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -89,7 +90,7 @@ export function CharacterChat() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold">💬 Chat with Your Characters</h3>
+        <h3 className="text-lg font-semibold">Chat with Your Characters</h3>
         <p className="text-sm text-foreground">
           From &lsquo;{bookTitle}&rsquo; — Powered by manuscript analysis
         </p>
@@ -117,7 +118,7 @@ export function CharacterChat() {
         <div className="bg-card border border-accent-dim rounded-xl p-6 space-y-4">
           <div className="text-center">
             <div className="text-4xl mb-2">
-              {characters.length > 0 ? "🎭" : "💬"}
+              <User className="w-10 h-10 mx-auto text-accent" />
             </div>
             <h4 className="text-lg font-semibold text-foreground">
               Chat with {protagonistName}
@@ -142,7 +143,7 @@ export function CharacterChat() {
             ))}
             <button
               onClick={() => startChat()}
-              className="w-full bg-gradient-to-r from-accent to-purple-600 text-white font-medium rounded-lg px-4 py-2.5 text-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              className="w-full bg-accent text-white font-medium rounded-lg px-4 py-2.5 text-sm transition-all hover:bg-accent/90 active:scale-[0.98]"
             >
               {`Ask ${protagonistName} Anything...`}
             </button>
@@ -183,7 +184,7 @@ export function CharacterChat() {
             <button
               onClick={() => handleSend()}
               disabled={!input.trim() || loading}
-              className="bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-4 py-2 transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-40 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
+              className="bg-accent text-white font-semibold rounded-lg px-4 py-2 transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Send
             </button>
@@ -194,7 +195,7 @@ export function CharacterChat() {
               onClick={() => setChatHistory([])}
               className="text-sm text-foreground hover:text-red-400 transition-colors"
             >
-              🗑️ Clear Conversation
+              <Trash2 className="w-4 h-4 inline-block mr-1.5" />Clear Conversation
             </button>
             <button
               onClick={() => { setShowIntro(true); setChatHistory([]); }}
@@ -207,7 +208,7 @@ export function CharacterChat() {
       )}
 
       <div className="bg-card border border-accent-dim rounded-xl p-4 text-sm text-foreground">
-        💡 <strong className="text-accent">Premium Feature:</strong> This chatbot is trained on your book&rsquo;s
+        <Lightbulb className="w-4 h-4 inline-block mr-1.5 text-accent" /> <strong className="text-accent">Premium Feature:</strong> This chatbot is trained on your book&rsquo;s
         characters and can be embedded on your author website.
         Fans can chat with your protagonist 24/7.
         Drives massive BookTok engagement.

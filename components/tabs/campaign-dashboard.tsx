@@ -13,19 +13,19 @@ import { toast } from "sonner";
 
 const PHASE_LABELS: Record<CampaignPhase, string> = {
   "pre-launch": "Pre-Launch (T-60 to T-1)",
-  launch: "🚀 Launch Week",
+  launch: "Launch Week",
   "post-launch": "Post-Launch (T+7 to T+30)",
 };
 
 const PHASE_ORDER: CampaignPhase[] = ["pre-launch", "launch", "post-launch"];
 
 const CONTENT_TYPES = [
-  { key: "hooks", label: "📱 TikTok Hooks", color: "text-blue-400" },
-  { key: "email", label: "📧 Email Sequence", color: "text-green-400" },
-  { key: "pitch", label: "🎯 Influencer Pitches", color: "text-purple-400" },
-  { key: "social", label: "📱 Social Posts", color: "text-yellow-400" },
-  { key: "ad", label: "📢 Ad Copy", color: "text-orange-400" },
-  { key: "video", label: "🎬 Video Prompts", color: "text-pink-400" },
+  { key: "hooks", label: "TikTok Hooks", color: "text-blue-400" },
+  { key: "email", label: "Email Sequence", color: "text-green-400" },
+  { key: "pitch", label: "Influencer Pitches", color: "text-accent" },
+  { key: "social", label: "Social Posts", color: "text-yellow-400" },
+  { key: "ad", label: "Ad Copy", color: "text-orange-400" },
+  { key: "video", label: "Video Prompts", color: "text-pink-400" },
 ];
 
 export function CampaignDashboard() {
@@ -115,7 +115,7 @@ export function CampaignDashboard() {
       }
     };
 
-    log.push("📱 Generating TikTok hooks...");
+    log.push("Generating TikTok hooks...");
     setGenLog([...log]);
     const hooks = await gen("/api/generate-hooks", {
       genre: (analysis?.genre || book?.bookGenre) ?? APP_CONFIG.bookGenre,
@@ -126,7 +126,7 @@ export function CampaignDashboard() {
     log.push(hooks.success ? "✅ Hooks generated" : `❌ Hooks: ${hooks.content}`);
     setGenLog([...log]);
 
-    log.push("📧 Generating email sequence...");
+    log.push("Generating email sequence...");
     setGenLog([...log]);
     const email = await gen("/api/generate-email", {
       bookTitle,
@@ -139,7 +139,7 @@ export function CampaignDashboard() {
     log.push(email.success ? "✅ Email sequence generated" : `❌ Email: ${email.content}`);
     setGenLog([...log]);
 
-    log.push("🎯 Generating influencer pitches...");
+    log.push("Generating influencer pitches...");
     setGenLog([...log]);
     const pitch = await gen("/api/generate-pitch", {
       bookTitle,
@@ -155,7 +155,7 @@ export function CampaignDashboard() {
     log.push(pitch.success ? "✅ Pitches generated" : `❌ Pitch: ${pitch.content}`);
     setGenLog([...log]);
 
-    log.push("📱 Generating social posts...");
+    log.push("Generating social posts...");
     setGenLog([...log]);
     const social = await gen("/api/generate-social", {
       bookTitle,
@@ -244,13 +244,13 @@ export function CampaignDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-bold text-foreground mb-1">🚀 Launch Campaign Dashboard</h2>
+        <h2 className="text-xl font-bold text-foreground mb-1">Launch Campaign Dashboard</h2>
         <p className="text-sm text-muted">Plan, generate, and track your entire book launch.</p>
       </div>
 
       {generatedItems.length > 0 && (
         <div className="bg-card border border-accent-dim rounded-xl p-6 space-y-3">
-          <h3 className="text-sm font-semibold text-foreground">📦 All Generated Content</h3>
+          <h3 className="text-sm font-semibold text-foreground">All Generated Content</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {CONTENT_TYPES.map((ct) => {
               const has = generatedItems.some((i) => i.type === ct.key);
@@ -287,7 +287,7 @@ export function CampaignDashboard() {
 
       {launchDate && (
         <>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="bg-card border border-accent-dim rounded-xl p-4">
               <p className="text-2xl font-bold text-accent">{overall.completed}/{overall.total}</p>
               <p className="text-xs text-muted">Overall Progress</p>
@@ -321,7 +321,7 @@ export function CampaignDashboard() {
                 view === "calendar" ? "bg-accent text-white" : "bg-card text-muted border border-accent-dim hover:text-accent"
               }`}
             >
-              📅 Content Calendar
+              Content Calendar
             </button>
           </div>
 
@@ -353,7 +353,7 @@ export function CampaignDashboard() {
                           <span className={`text-xs px-2 py-0.5 rounded-full ${
                             task.daysFromLaunch < 0 ? "bg-blue-500/10 text-blue-400" :
                             task.daysFromLaunch === 0 ? "bg-green-500/10 text-green-400" :
-                            "bg-purple-500/10 text-purple-400"
+                            "bg-accent/10 text-accent"
                           }`}>
                             {task.daysFromLaunch < 0 ? `T${task.daysFromLaunch}` :
                              task.daysFromLaunch === 0 ? "Launch Day" :
@@ -368,7 +368,7 @@ export function CampaignDashboard() {
             </div>
           ) : (
             <div className="bg-card border border-accent-dim rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-accent-dim font-medium text-foreground text-sm">📅 Content Calendar</div>
+              <div className="px-5 py-3 border-b border-accent-dim font-medium text-foreground text-sm">Content Calendar</div>
               <div className="divide-y divide-accent-dim max-h-96 overflow-y-auto">
                 {entries.length === 0 ? (
                   <div className="px-5 py-8 text-center text-muted text-sm">Set a launch date to see your calendar.</div>
@@ -408,7 +408,7 @@ export function CampaignDashboard() {
             <button
               onClick={handleGenerateAll}
               disabled={generating}
-              className="bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-5 py-2.5 transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-40 disabled:hover:translate-y-0 disabled:cursor-not-allowed"
+              className="bg-accent text-white font-semibold rounded-lg px-5 py-2.5 transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {generating ? "⏳ Generating..." : "⚡ Generate All Content"}
             </button>
@@ -426,7 +426,7 @@ export function CampaignDashboard() {
               onClick={() => setShowLanding(!showLanding)}
               className="w-full px-5 py-3 flex items-center justify-between bg-card hover:bg-accent/5 transition-colors"
             >
-              <span className="font-medium text-foreground">🌐 Landing Page Builder</span>
+              <span className="font-medium text-foreground">Landing Page Builder</span>
               <span className="text-muted text-sm">{showLanding ? "▲" : "▼"}</span>
             </button>
             {showLanding && (
@@ -466,13 +466,13 @@ export function CampaignDashboard() {
                 </div>
                 <div className="flex gap-3">
                   <button onClick={() => setLandingPreview(!landingPreview)} className="bg-card border border-accent text-accent font-medium rounded-lg px-4 py-2 text-sm hover:bg-accent/5 transition-colors">
-                    {landingPreview ? "Hide Preview" : "👁 Preview"}
+                    {landingPreview ? "Hide Preview" : "Preview"}
                   </button>
                   <button onClick={() => { navigator.clipboard.writeText(buildLandingPageHTML(landingConfig)); toast.success("HTML copied!"); }} className="bg-card border border-accent text-accent font-medium rounded-lg px-4 py-2 text-sm hover:bg-accent/5 transition-colors">
-                    📋 Copy HTML
+                    Copy HTML
                   </button>
                   <button onClick={() => { navigator.clipboard.writeText(buildEmbedCode(landingConfig)); toast.success("Embed code copied!"); }} className="bg-card border border-accent text-accent font-medium rounded-lg px-4 py-2 text-sm hover:bg-accent/5 transition-colors">
-                    🔗 Copy Embed Code
+                    Copy Embed Code
                   </button>
                 </div>
                 {landingPreview && (
@@ -497,7 +497,7 @@ export function CampaignDashboard() {
                 <p className="text-sm text-muted">Manage ARC reviewers, send review requests, and track reviews.</p>
 
                 {reviewers.length > 0 && (
-                  <div className="grid grid-cols-5 gap-3">
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                     {Object.entries(getReviewStats(reviewers)).map(([key, val]) => (
                       <div key={key} className="bg-card border border-accent-dim rounded-lg p-3 text-center">
                         <p className="text-lg font-bold text-accent">{val}</p>

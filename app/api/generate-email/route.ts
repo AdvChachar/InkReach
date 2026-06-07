@@ -1,8 +1,21 @@
 import Groq from "groq-sdk";
+import { createServerSupabase } from "@/lib/supabase-server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: Request) {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return Response.json({ error: "Unauthorized. Please sign in." }, { status: 401 });
+  }
+
+  const rate = await checkRateLimit(user.id);
+  if (!rate.allowed) {
+    return Response.json({ error: rate.error }, { status: 429 });
+  }
+
   const { bookTitle, authorName, launchDate, readerAvatar, tropes, bookBlurb } = await req.json();
 
   const prompt = `You are a direct-response email copywriter specializing in

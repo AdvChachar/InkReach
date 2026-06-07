@@ -59,12 +59,12 @@ export function Giveaways() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">🎁 Giveaways</h2>
+          <h2 className="text-xl font-bold text-foreground">Giveaways</h2>
           <p className="text-sm text-muted">Run giveaways and contests to build hype for your book.</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-gradient-to-r from-accent to-purple-600 text-white font-semibold rounded-lg px-4 py-2 text-sm hover:-translate-y-0.5 hover:shadow-lg transition-all"
+          className="bg-accent text-white font-semibold rounded-lg px-4 py-2 text-sm transition-all hover:bg-accent/90 active:scale-[0.98]"
         >
           {showForm ? "Cancel" : "+ New Giveaway"}
         </button>
@@ -108,7 +108,7 @@ export function Giveaways() {
 
       {winner && (
         <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-center">
-          <p className="text-lg font-bold text-green-400">🏆 Winner: {winner.name}</p>
+          <p className="text-lg font-bold text-green-400">Winner: {winner.name}</p>
           <p className="text-sm text-foreground">{winner.email}</p>
           <button onClick={() => setWinner(null)} className="text-xs text-muted hover:text-accent mt-2">Dismiss</button>
         </div>

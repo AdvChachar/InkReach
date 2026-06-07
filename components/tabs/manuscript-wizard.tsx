@@ -6,6 +6,7 @@ import { saveManuscriptAnalysis, type ManuscriptAnalysis } from "@/lib/manuscrip
 import { saveGeneratedContent, type GeneratedItem } from "@/lib/generated-content";
 import { getBooks, removeBook, updateBook } from "@/lib/books";
 import { APP_CONFIG } from "@/config/client";
+import { BookOpen, FileText, Rocket, Sparkles, X } from "lucide-react";
 
 type WizardStep = "upload" | "analyzing" | "review" | "generating" | "done";
 
@@ -27,7 +28,7 @@ const GENERATION_STEPS = [
   { key: "video", label: "Video Prompts" },
 ];
 
-export function ManuscriptWizard({ onComplete }: { onComplete: () => void }) {
+export function ManuscriptWizard({ onComplete, onClose }: { onComplete: () => void; onClose?: () => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<WizardStep>("upload");
@@ -168,9 +169,18 @@ export function ManuscriptWizard({ onComplete }: { onComplete: () => void }) {
 
   if (step === "upload") {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-[60vh] relative">
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 rounded-lg hover:bg-accent-dim text-muted hover:text-foreground transition-colors z-10"
+            aria-label="Close wizard"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
         <div className="bg-card border border-accent-dim rounded-2xl p-10 max-w-lg w-full text-center space-y-6">
-          <div className="text-5xl">📖</div>
+          <BookOpen className="w-12 h-12 mx-auto text-accent" />
           <h2 className="text-2xl font-bold text-foreground">Upload Your Manuscript</h2>
           <p className="text-sm text-muted">
             Drop your manuscript file and we&apos;ll analyze it to auto-generate all your marketing content — hooks, emails, pitches, social posts, ads, and video ideas.
@@ -182,7 +192,7 @@ export function ManuscriptWizard({ onComplete }: { onComplete: () => void }) {
             onClick={() => fileInputRef.current?.click()}
             className="border-2 border-dashed border-accent-dim rounded-xl p-8 cursor-pointer hover:border-accent transition-colors space-y-3"
           >
-            <div className="text-3xl">📄</div>
+            <FileText className="w-8 h-8 mx-auto text-accent" />
             <p className="text-sm text-foreground font-medium">Drop your file here or click to browse</p>
             <p className="text-xs text-muted">Supports .txt, .pdf, and .docx (max 10MB)</p>
           </div>
@@ -192,7 +202,7 @@ export function ManuscriptWizard({ onComplete }: { onComplete: () => void }) {
 
           <details className="text-left border border-accent-dim rounded-xl overflow-hidden">
             <summary className="px-4 py-3 text-sm text-muted cursor-pointer hover:text-accent transition-colors font-medium">
-              🎨 Upload Book Cover (optional — for color scheme detection)
+              Upload Book Cover (optional — for color scheme detection)
             </summary>
             <div className="px-4 py-3 border-t border-accent-dim space-y-2">
               <div
@@ -300,7 +310,7 @@ export function ManuscriptWizard({ onComplete }: { onComplete: () => void }) {
               <label className="text-xs text-muted font-medium">Tropes</label>
               <div className="flex flex-wrap gap-1 mt-1">
                 {(analysis.tropes || []).map((t, i) => (
-                  <span key={i} className="text-xs bg-purple-500/10 text-purple-400 rounded-full px-2 py-0.5">{t}</span>
+                  <span key={i} className="text-xs bg-accent/10 text-accent rounded-full px-2 py-0.5">{t}</span>
                 ))}
               </div>
             </div>
@@ -339,9 +349,9 @@ export function ManuscriptWizard({ onComplete }: { onComplete: () => void }) {
 
         <button
           onClick={handleGenerateAll}
-          className="w-full bg-gradient-to-r from-accent to-purple-600 text-white font-bold rounded-xl px-6 py-4 text-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
+          className="w-full bg-accent text-white font-bold rounded-lg px-6 py-4 text-lg transition-all hover:bg-accent/90 active:scale-[0.98]"
         >
-          🚀 Generate All Marketing Content
+          <Rocket className="w-5 h-5 inline-block mr-2" />Generate All Marketing Content
         </button>
         <p className="text-xs text-muted text-center">
           This will generate hooks, emails, pitches, social posts, ad copy, and video prompts from your manuscript.
@@ -387,7 +397,7 @@ export function ManuscriptWizard({ onComplete }: { onComplete: () => void }) {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="bg-card border border-accent-dim rounded-2xl p-10 max-w-md w-full text-center space-y-6">
-        <div className="text-5xl">🎉</div>
+        <Sparkles className="w-12 h-12 mx-auto text-accent" />
         <h2 className="text-2xl font-bold text-foreground">All Set!</h2>
         <p className="text-sm text-muted">
           Your manuscript has been analyzed and all marketing content has been pre-generated.
@@ -404,9 +414,9 @@ export function ManuscriptWizard({ onComplete }: { onComplete: () => void }) {
 
         <button
           onClick={onComplete}
-          className="w-full bg-gradient-to-r from-accent to-purple-600 text-white font-bold rounded-xl px-6 py-3 text-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
+          className="w-full bg-accent text-white font-bold rounded-lg px-6 py-3 text-lg transition-all hover:bg-accent/90 active:scale-[0.98]"
         >
-          🚀 Go to Dashboard
+          <Rocket className="w-5 h-5 inline-block mr-2" />Go to Dashboard
         </button>
       </div>
     </div>
