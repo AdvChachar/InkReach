@@ -17,6 +17,7 @@ import {
 import { syncAnalysisFromSupabase, syncAnalysisToSupabase } from "@/lib/manuscript";
 import { syncGeneratedFromSupabase, syncGeneratedToSupabase } from "@/lib/generated-content";
 import { createClient } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 interface BookContextValue {
   books: BookConfig[];
@@ -36,6 +37,7 @@ export function BookProvider({ children }: { children: ReactNode }) {
   const [books, setBooks] = useState<BookConfig[]>([]);
   const [activeBookIdState, setActiveBookIdState] = useState<string | null>(null);
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const existing = initDefaultBook();
@@ -50,12 +52,22 @@ export function BookProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser({ id: session.user.id, email: session.user.email });
-        syncFromSupabase(session.user.id);
-      } else {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
         setUser(null);
+        setBooks([]);
+        setActiveBookIdState(null);
+        localStorage.removeItem("inkreach_books");
+        localStorage.removeItem("inkreach_active_book_id");
+        localStorage.removeItem("inkreach_manuscript_analyses");
+        localStorage.removeItem("inkreach_generated_content");
+        router.push("/login");
+        router.refresh();
+      } else if (session?.user) {
+        setUser({ id: session.user.id, email: session.user.email });
+        syncFromSupabase(session.user.id).then(() => {
+          router.refresh();
+        });
       }
     });
 
@@ -108,7 +120,15 @@ export function BookProvider({ children }: { children: ReactNode }) {
     const supabase = createClient();
     await supabase.auth.signOut();
     setUser(null);
-  }, []);
+    setBooks([]);
+    setActiveBookIdState(null);
+    localStorage.removeItem("inkreach_books");
+    localStorage.removeItem("inkreach_active_book_id");
+    localStorage.removeItem("inkreach_manuscript_analyses");
+    localStorage.removeItem("inkreach_generated_content");
+    router.push("/login");
+    router.refresh();
+  }, [router]);
 
   return (
     <BookContext.Provider value={{ books, activeBook, activeBookId: activeBookIdState, switchBook, addNewBook, updateCurrentBook, deleteBook, user, signOut }}>
