@@ -61,8 +61,7 @@ export function BookProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("inkreach_active_book_id");
         localStorage.removeItem("inkreach_manuscript_analyses");
         localStorage.removeItem("inkreach_generated_content");
-        router.push("/login");
-        router.refresh();
+        window.location.href = "/login";
       } else if (session?.user) {
         setUser({ id: session.user.id, email: session.user.email });
         syncFromSupabase(session.user.id).then(() => {
@@ -119,16 +118,7 @@ export function BookProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    setUser(null);
-    setBooks([]);
-    setActiveBookIdState(null);
-    localStorage.removeItem("inkreach_books");
-    localStorage.removeItem("inkreach_active_book_id");
-    localStorage.removeItem("inkreach_manuscript_analyses");
-    localStorage.removeItem("inkreach_generated_content");
-    router.push("/login");
-    router.refresh();
-  }, [router]);
+  }, []);
 
   return (
     <BookContext.Provider value={{ books, activeBook, activeBookId: activeBookIdState, switchBook, addNewBook, updateCurrentBook, deleteBook, user, signOut }}>

@@ -32,24 +32,23 @@ export default function AdminPage() {
       }
 
       setIsAdmin(true);
-      await loadData();
+
+      const res = await fetch("/api/admin/users");
+      const data = await res.json();
+
+      if (data.profiles) {
+        const total = data.profiles.length;
+        const proCount = data.profiles.filter((p: any) => p.subscription_status === "pro").length;
+        const todayGens = (data.usage || []).filter((l: any) =>
+          l.created_at?.startsWith(new Date().toISOString().slice(0, 10))
+        ).length;
+        setStats({ total, proCount, todayGens, totalGens: data.usage?.length || 0 });
+        setUsers(data.profiles);
+      }
+
       setLoading(false);
     })();
   }, [router, supabase]);
-
-  async function loadData() {
-    const { data: allProfiles } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
-    const { data: usage } = await supabase.from("usage_logs").select("*");
-
-    const total = allProfiles?.length || 0;
-    const proCount = allProfiles?.filter((p) => p.subscription_status === "pro").length || 0;
-    const todayGens = usage?.filter((l) =>
-      l.created_at?.startsWith(new Date().toISOString().slice(0, 10))
-    ).length || 0;
-
-    setStats({ total, proCount, todayGens, totalGens: usage?.length || 0 });
-    setUsers(allProfiles || []);
-  }
 
   async function togglePro(targetUserId: string, isCurrentlyPro: boolean) {
     setToggling(targetUserId);
@@ -62,7 +61,18 @@ export default function AdminPage() {
       }),
     });
     setToggling(null);
-    await loadData();
+
+    const res = await fetch("/api/admin/users");
+    const data = await res.json();
+    if (data.profiles) {
+      const total = data.profiles.length;
+      const proCount = data.profiles.filter((p: any) => p.subscription_status === "pro").length;
+      const todayGens = (data.usage || []).filter((l: any) =>
+        l.created_at?.startsWith(new Date().toISOString().slice(0, 10))
+      ).length;
+      setStats({ total, proCount, todayGens, totalGens: data.usage?.length || 0 });
+      setUsers(data.profiles);
+    }
   }
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted">Loading...</div>;
