@@ -27,7 +27,7 @@ interface BookContextValue {
   addNewBook: (overrides?: Partial<Omit<BookConfig, "id" | "createdAt">>) => void;
   updateCurrentBook: (updates: Partial<Omit<BookConfig, "id" | "createdAt">>) => void;
   deleteBook: (id: string) => void;
-  user: { id: string; email?: string } | null;
+  user: { id: string; email?: string; user_metadata?: { full_name?: string; name?: string } } | null;
   signOut: () => Promise<void>;
 }
 
@@ -36,14 +36,14 @@ const BookContext = createContext<BookContextValue | null>(null);
 export function BookProvider({ children }: { children: ReactNode }) {
   const [books, setBooks] = useState<BookConfig[]>([]);
   const [activeBookIdState, setActiveBookIdState] = useState<string | null>(null);
-  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { full_name?: string; name?: string } } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
       if (data?.user) {
-        setUser({ id: data.user.id, email: data.user.email });
+        setUser({ id: data.user.id, email: data.user.email, user_metadata: data.user.user_metadata as any });
         syncOnlyFromSupabase(data.user.id);
       } else {
         const existing = initDefaultBook();
@@ -63,7 +63,7 @@ export function BookProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("inkreach_generated_content");
         window.location.href = "/login";
       } else if (session?.user) {
-        setUser({ id: session.user.id, email: session.user.email });
+        setUser({ id: session.user.id, email: session.user.email, user_metadata: session.user.user_metadata as any });
         clearLocalStorage();
         syncOnlyFromSupabase(session.user.id).then(() => {
           router.refresh();

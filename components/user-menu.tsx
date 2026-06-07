@@ -45,7 +45,7 @@ export function UserMenu() {
           {user.email?.[0]?.toUpperCase() || "U"}
         </div>
         <span className="text-sm font-medium text-gray-900 dark:text-foreground max-sm:hidden">
-          {user.email?.split("@")[0] || "User"}
+          {user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "User"}
         </span>
       </button>
 

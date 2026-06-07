@@ -38,8 +38,16 @@ export async function checkRateLimit(userId: string, proMax = 100, existingSupab
   if (!profile) {
     const admin = getServiceSupabase();
     if (admin) {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
       await admin.from("profiles").upsert(
-        { id: userId, daily_gen_count: 1, last_gen_date: today, subscription_status: "free" },
+        {
+          id: userId,
+          email: authUser?.email || null,
+          name: authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || null,
+          daily_gen_count: 1,
+          last_gen_date: today,
+          subscription_status: "free",
+        },
         { onConflict: "id" }
       );
     }
