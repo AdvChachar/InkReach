@@ -30,6 +30,7 @@ Copy `.env.local.example` to `.env.local` and fill in the keys below.
 2. Sign up with Google/GitHub/Email
 3. Go to **API Keys** → **Create API Key**
 4. Copy the key into `.env.local` as `GROQ_API_KEY`
+5. (Optional) Create 2 more free accounts and add their keys as `GROQ_API_KEY_2` and `GROQ_API_KEY_3` for auto-fallback when one key hits its daily limit.
 
 ---
 
@@ -92,6 +93,8 @@ Copy `.env.local.example` to `.env.local` and fill in the keys below.
 
 ```env
 GROQ_API_KEY=gsk_your_key_here
+GROQ_API_KEY_2=gsk_your_second_key_here
+GROQ_API_KEY_3=gsk_your_third_key_here
 STABILITY_API_KEY=sk_your_key_here
 SEEDANCE_API_KEY=sk_your_key_here
 GEMINI_API_KEY=your_key_here
