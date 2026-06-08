@@ -50,6 +50,7 @@ export async function checkRateLimit(userId: string, proMax = 100, existingSupab
         },
         { onConflict: "id" }
       );
+      await admin.from("usage_logs").insert({ user_id: userId, event_type: "generation", metadata: {} });
     }
     return { allowed: true, remaining: 19 };
   }
@@ -62,6 +63,8 @@ export async function checkRateLimit(userId: string, proMax = 100, existingSupab
       .from("profiles")
       .update({ daily_gen_count: 1, last_gen_date: today })
       .eq("id", userId);
+    const admin = getServiceSupabase();
+    if (admin) await admin.from("usage_logs").insert({ user_id: userId, event_type: "generation", metadata: {} });
     return { allowed: true, remaining: maxGenerations - 1 };
   }
 
@@ -78,6 +81,8 @@ export async function checkRateLimit(userId: string, proMax = 100, existingSupab
     .from("profiles")
     .update({ daily_gen_count: currentCount + 1 })
     .eq("id", userId);
+  const admin = getServiceSupabase();
+  if (admin) await admin.from("usage_logs").insert({ user_id: userId, event_type: "generation", metadata: {} });
 
   return { allowed: true, remaining: maxGenerations - currentCount - 1 };
 }
