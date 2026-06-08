@@ -12,6 +12,8 @@ import {
   initDefaultBook,
   syncBooksFromSupabase,
   syncBooksToSupabase,
+  upsertBookToSupabase,
+  deleteBookFromSupabase,
   type BookConfig,
 } from "@/lib/books";
 import { syncAnalysisFromSupabase, syncAnalysisToSupabase } from "@/lib/manuscript";
@@ -62,12 +64,14 @@ export function BookProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("inkreach_manuscript_analyses");
         localStorage.removeItem("inkreach_generated_content");
         window.location.href = "/login";
-      } else if (session?.user) {
+      } else if (session?.user && event === "SIGNED_IN") {
         setUser({ id: session.user.id, email: session.user.email, user_metadata: session.user.user_metadata as any });
         clearLocalStorage();
         syncOnlyFromSupabase(session.user.id).then(() => {
           router.refresh();
         });
+      } else if (session?.user && event === "INITIAL_SESSION") {
+        setUser({ id: session.user.id, email: session.user.email, user_metadata: session.user.user_metadata as any });
       }
     });
 
@@ -100,19 +104,30 @@ export function BookProvider({ children }: { children: ReactNode }) {
     const updated = addBook(overrides);
     setBooks(updated);
     setActiveBookIdState(getActiveBookId());
-  }, []);
+    const newBook = updated.find((b) => b.id === getActiveBookId());
+    if (newBook && user) {
+      upsertBookToSupabase(user.id, newBook);
+    }
+  }, [user]);
 
   const updateCurrentBook = useCallback((updates: Partial<Omit<BookConfig, "id" | "createdAt">>) => {
     if (!activeBookIdState) return;
     const updated = updateBook(activeBookIdState, updates);
     setBooks(updated);
-  }, [activeBookIdState]);
+    if (user) {
+      const book = updated.find((b) => b.id === activeBookIdState);
+      if (book) upsertBookToSupabase(user.id, book);
+    }
+  }, [activeBookIdState, user]);
 
   const deleteBook = useCallback((id: string) => {
     const updated = removeBook(id);
     setBooks(updated);
     setActiveBookIdState(getActiveBookId());
-  }, []);
+    if (user) {
+      deleteBookFromSupabase(user.id, id);
+    }
+  }, [user]);
 
   const signOut = useCallback(async () => {
     const supabase = createClient();

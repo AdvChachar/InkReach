@@ -25,6 +25,18 @@ export async function GET(req: Request) {
 
   const { data: profiles } = await admin.from("profiles").select("*").order("created_at", { ascending: false });
   const { data: usage } = await admin.from("usage_logs").select("*");
+  const { data: books } = await admin.from("books").select("book_cover_url");
+  const { data: analyses } = await admin.from("manuscript_analyses").select("raw_text,analysis");
+  const { data: genContent } = await admin.from("generated_content").select("content,meta");
 
-  return Response.json({ profiles: profiles || [], usage: usage || [] });
+  let totalBytes = 0;
+  const addSize = (val: unknown) => {
+    if (val) totalBytes += typeof val === "string" ? new Blob([val]).size : JSON.stringify(val).length;
+  };
+  (profiles || []).forEach((p: any) => { addSize(p.email); addSize(p.name); });
+  (books || []).forEach((b: any) => addSize(b.book_cover_url));
+  (analyses || []).forEach((a: any) => { addSize(a.raw_text); addSize(a.analysis); });
+  (genContent || []).forEach((g: any) => { addSize(g.content); addSize(g.meta); });
+
+  return Response.json({ profiles: profiles || [], usage: usage || [], storageBytes: totalBytes });
 }

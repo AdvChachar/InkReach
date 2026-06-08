@@ -226,7 +226,7 @@ export function ManuscriptWizard({ onComplete, onClose }: { onComplete: () => vo
           </details>
 
           <p className="text-xs text-muted">
-            Your manuscript stays on your device. Nothing is uploaded to any server permanently.
+            Your manuscript is encrypted and stored securely in the cloud.
           </p>
         </div>
       </div>

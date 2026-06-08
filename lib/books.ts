@@ -80,6 +80,44 @@ export function removeBook(id: string): BookConfig[] {
   return books;
 }
 
+export async function upsertBookToSupabase(userId: string, book: BookConfig) {
+  const { createClient } = await import("./supabase");
+  const supabase = createClient();
+  const { data: existing } = await supabase
+    .from("books")
+    .select("id")
+    .eq("id", book.id)
+    .maybeSingle();
+  const record = {
+    id: book.id,
+    user_id: userId,
+    title: book.title,
+    author_name: book.authorName,
+    book_cover_url: book.bookCoverUrl,
+    book_blurb: book.bookBlurb,
+    book_genre: book.bookGenre,
+    protagonist_name: book.protagonistName,
+    protagonist_persona: book.protagonistPersona,
+    book_tropes: book.bookTropes,
+    target_reader: book.targetReader,
+    marketing_tone: book.marketingTone,
+    manuscript_status: book.manuscriptStatus || "none",
+  };
+  if (existing) {
+    await supabase.from("books").update(record).eq("id", book.id);
+  } else {
+    await supabase.from("books").insert(record);
+  }
+}
+
+export async function deleteBookFromSupabase(userId: string, bookId: string) {
+  const { createClient } = await import("./supabase");
+  const supabase = createClient();
+  await supabase.from("books").delete().eq("id", bookId).eq("user_id", userId);
+  await supabase.from("manuscript_analyses").delete().eq("book_id", bookId);
+  await supabase.from("generated_content").delete().eq("book_id", bookId);
+}
+
 export function getActiveBook(): BookConfig | null {
   const id = getActiveBookId();
   if (!id) return null;

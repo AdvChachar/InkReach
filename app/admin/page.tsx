@@ -3,13 +3,14 @@
 import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { Users, TrendingUp, CreditCard, Activity, Crown, XCircle, Loader2 } from "lucide-react";
+import { Users, TrendingUp, CreditCard, Activity, Crown, XCircle, Loader2, HardDrive, AlertTriangle } from "lucide-react";
 
 export default function AdminPage() {
   const [stats, setStats] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [storageBytes, setStorageBytes] = useState(0);
   const [error, setError] = useState("");
   const router = useRouter();
   const supabase = useRef(createClient()).current;
@@ -60,6 +61,7 @@ export default function AdminPage() {
       l.created_at?.startsWith(new Date().toISOString().slice(0, 10))
     ).length;
     setStats({ total, proCount, todayGens, totalGens: data.usage?.length || 0 });
+    setStorageBytes(data.storageBytes || 0);
     setUsers(data.profiles);
   }
 
@@ -82,11 +84,12 @@ export default function AdminPage() {
     <div className="min-h-screen bg-dark p-6 max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold text-foreground mb-6">Admin Dashboard</h1>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
         <StatCard icon={<Users className="w-5 h-5" />} label="Total Users" value={stats.total} color="text-blue-400" />
         <StatCard icon={<CreditCard className="w-5 h-5" />} label="Pro Users" value={stats.proCount} color="text-accent" />
         <StatCard icon={<Activity className="w-5 h-5" />} label="Today's Generations" value={stats.todayGens} color="text-yellow-400" />
         <StatCard icon={<TrendingUp className="w-5 h-5" />} label="Total Generations" value={stats.totalGens} color="text-purple-400" />
+        <StorageCard bytes={storageBytes} />
       </div>
 
       <div className="bg-card border border-border-subtle rounded-lg overflow-hidden">
@@ -151,12 +154,38 @@ export default function AdminPage() {
   );
 }
 
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number; color: string }) {
   return (
     <div className="bg-card border border-border-subtle rounded-lg p-4">
       <div className={`${color} mb-1`}>{icon}</div>
       <div className="text-2xl font-bold text-foreground">{value}</div>
       <div className="text-xs text-muted">{label}</div>
+    </div>
+  );
+}
+
+function StorageCard({ bytes }: { bytes: number }) {
+  const maxBytes = 500 * 1024 * 1024;
+  const pct = Math.min((bytes / maxBytes) * 100, 100);
+  const warning = bytes > 200 * 1024 * 1024;
+  const barColor = warning ? "bg-red-500" : bytes > 100 * 1024 * 1024 ? "bg-yellow-500" : "bg-accent";
+  return (
+    <div className="bg-card border border-border-subtle rounded-lg p-4">
+      <div className={`mb-1 ${warning ? "text-red-400" : "text-accent"}`}>
+        {warning ? <AlertTriangle className="w-5 h-5" /> : <HardDrive className="w-5 h-5" />}
+      </div>
+      <div className="text-2xl font-bold text-foreground">{formatBytes(bytes)}</div>
+      <div className="text-xs text-muted mb-2">Database Storage (500 MB)</div>
+      <div className="w-full h-1.5 bg-muted/20 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${pct}%` }} />
+      </div>
+      {warning && <p className="text-xs text-red-400 mt-1">⚠️ Over 200 MB — consider cleaning up</p>}
     </div>
   );
 }

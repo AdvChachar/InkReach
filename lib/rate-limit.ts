@@ -51,11 +51,11 @@ export async function checkRateLimit(userId: string, proMax = 100, existingSupab
         { onConflict: "id" }
       );
     }
-    return { allowed: true, remaining: 4 };
+    return { allowed: true, remaining: 19 };
   }
 
   const isPro = profile.subscription_status === "pro";
-  const maxGenerations = isPro ? proMax : 5;
+  const maxGenerations = isPro ? proMax : 20;
 
   if (profile.last_gen_date !== today) {
     await supabase
@@ -70,7 +70,7 @@ export async function checkRateLimit(userId: string, proMax = 100, existingSupab
   if (currentCount >= maxGenerations) {
     const resetMsg = isPro
       ? `Daily generation limit reached (${proMax}/day). Resets at midnight UTC.`
-      : "Free tier limit reached (5/day). Upgrade to Pro for 100/day.";
+      : "Free tier limit reached (20/day). Upgrade to Pro for 100/day.";
     return { allowed: false, remaining: 0, error: resetMsg };
   }
 
