@@ -1,10 +1,11 @@
 import Groq from "groq-sdk";
 
-const keys = [
-  process.env.GROQ_API_KEY,
-  process.env.GROQ_API_KEY_2,
-  process.env.GROQ_API_KEY_3,
-].filter(Boolean) as string[];
+const keys: string[] = [];
+if (process.env.GROQ_API_KEY) keys.push(process.env.GROQ_API_KEY);
+for (let i = 2; i <= 20; i++) {
+  const key = process.env[`GROQ_API_KEY_${i}`];
+  if (key) keys.push(key);
+}
 
 const clients = keys.map((key) => new Groq({ apiKey: key }));
 
@@ -35,6 +36,6 @@ export async function createChatCompletion(params: CreateCompletionParams) {
   const errMsg =
     clients.length > 1
       ? "All Groq API keys are rate limited. Try again later."
-      : "Groq API rate limit reached. Add GROQ_API_KEY_2 and GROQ_API_KEY_3 for automatic fallback.";
+      : "Groq API rate limit reached. Create more accounts and add as GROQ_API_KEY_2, _3, etc. for automatic fallback.";
   throw new Error(errMsg);
 }

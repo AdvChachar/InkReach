@@ -53,7 +53,7 @@ no placeholders, no [INSERT HERE] gaps.`;
   try {
     const completion = await createChatCompletion({
       messages: [{ role: "user", content: prompt }],
-      model: "llama-3.3-70b-versatile",
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
     });
     const text = completion.choices[0]?.message?.content;
     if (!text) {
