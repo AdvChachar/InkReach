@@ -80,16 +80,22 @@ export async function syncAnalysisToSupabase(userId: string) {
     const raw = localStorage.getItem(`${ANALYSIS_KEY}_${book.id}`);
     if (!raw) continue;
     const analysis = JSON.parse(raw) as ManuscriptAnalysis;
-    const { rawText, ...rest } = analysis;
-    const { data: existing } = await supabase
-      .from("manuscript_analyses")
-      .select("id")
-      .eq("book_id", book.id)
-      .maybeSingle();
-    if (existing) {
-      await supabase.from("manuscript_analyses").update({ analysis: rest, raw_text: rawText }).eq("id", existing.id);
-    } else {
-      await supabase.from("manuscript_analyses").insert({ book_id: book.id, user_id: userId, analysis: rest, raw_text: rawText });
-    }
+    await upsertManuscriptAnalysisToSupabase(userId, book.id, analysis);
+  }
+}
+
+export async function upsertManuscriptAnalysisToSupabase(userId: string, bookId: string, analysis: ManuscriptAnalysis) {
+  const { createClient } = await import("./supabase");
+  const supabase = createClient();
+  const { rawText, ...rest } = analysis;
+  const { data: existing } = await supabase
+    .from("manuscript_analyses")
+    .select("id")
+    .eq("book_id", bookId)
+    .maybeSingle();
+  if (existing) {
+    await supabase.from("manuscript_analyses").update({ analysis: rest, raw_text: rawText }).eq("id", existing.id);
+  } else {
+    await supabase.from("manuscript_analyses").insert({ book_id: bookId, user_id: userId, analysis: rest, raw_text: rawText });
   }
 }

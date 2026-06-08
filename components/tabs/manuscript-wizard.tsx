@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useBook } from "@/context/book-context";
 import { saveManuscriptAnalysis, type ManuscriptAnalysis } from "@/lib/manuscript";
-import { saveGeneratedContent, type GeneratedItem } from "@/lib/generated-content";
+import { saveAndSyncGeneratedContent, type GeneratedItem } from "@/lib/generated-content";
 import { getBooks, removeBook, updateBook } from "@/lib/books";
 import { APP_CONFIG } from "@/config/client";
 import { BookOpen, FileText, Rocket, Sparkles, X } from "lucide-react";
@@ -41,6 +41,7 @@ export function ManuscriptWizard({ onComplete, onClose }: { onComplete: () => vo
   const [generationStatus, setGenerationStatus] = useState("");
   const [error, setError] = useState("");
   const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [selectedTypes, setSelectedTypes] = useState(new Set(GENERATION_STEPS.map((g) => g.key)));
 
   const { addNewBook } = useBook();
 
@@ -55,7 +56,7 @@ export function ManuscriptWizard({ onComplete, onClose }: { onComplete: () => vo
     if (f) startUpload(f);
   };
 
-  const startUpload = async (f: File) => {
+  const startUpload = (f: File) => {
     setFile(f);
     setError("");
 
@@ -63,14 +64,20 @@ export function ManuscriptWizard({ onComplete, onClose }: { onComplete: () => vo
     const ext = "." + f.name.split(".").pop()?.toLowerCase();
     if (!allowed.includes(ext)) {
       setError("Please upload a .txt, .pdf, or .docx file");
+      setFile(null);
       return;
     }
 
+    setWordCount(0);
+  };
+
+  const beginAnalysis = async () => {
+    if (!file) return;
     setStep("analyzing");
     setAnalysisStep(0);
 
     const formData = new FormData();
-    formData.append("file", f);
+    formData.append("file", file);
 
     try {
       const res = await fetch("/api/upload-manuscript", { method: "POST", body: formData });
@@ -103,7 +110,7 @@ export function ManuscriptWizard({ onComplete, onClose }: { onComplete: () => vo
 
       setAnalysis(fullAnalysis);
 
-      const bookName = fullAnalysis.title || f.name.replace(/\.[^/.]+$/, "");
+      const bookName = fullAnalysis.title || file.name.replace(/\.[^/.]+$/, "");
       addNewBook({
         title: bookName,
         authorName: fullAnalysis.author || APP_CONFIG.authorName,
@@ -136,32 +143,38 @@ export function ManuscriptWizard({ onComplete, onClose }: { onComplete: () => vo
     setStep("generating");
     setGenerationProgress(0);
 
+    const { createClient } = await import("@/lib/supabase");
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+
     try {
       const res = await fetch("/api/generate-all", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ analysis }),
+        body: JSON.stringify({ analysis, types: Array.from(selectedTypes) }),
       });
       const data = await res.json();
 
       if (data.results) {
+        const steps = GENERATION_STEPS.filter((g) => selectedTypes.has(g.key));
         const items: GeneratedItem[] = data.results.map((r: any) => ({
           type: r.type,
-          label: GENERATION_STEPS.find((g) => g.key === r.type)?.label || r.type,
+          label: steps.find((g) => g.key === r.type)?.label || r.type,
           content: r.content,
           generatedAt: new Date().toISOString(),
         }));
 
         const bookId = localStorage.getItem("inkreach_active_book");
-        if (bookId) saveGeneratedContent(bookId, items);
+        if (bookId) await saveAndSyncGeneratedContent(bookId, items, userId);
 
-        setGenerationProgress(GENERATION_STEPS.length);
+        setGenerationProgress(steps.length);
         await new Promise((r) => setTimeout(r, 300));
         setStep("done");
       }
     } catch {
       setError("Generation failed. You can regenerate from each tab.");
-      setGenerationProgress(GENERATION_STEPS.length);
+      setGenerationProgress(selectedTypes.size);
       await new Promise((r) => setTimeout(r, 300));
       setStep("done");
     }
@@ -186,44 +199,65 @@ export function ManuscriptWizard({ onComplete, onClose }: { onComplete: () => vo
             Drop your manuscript file and we&apos;ll analyze it to auto-generate all your marketing content — hooks, emails, pitches, social posts, ads, and video ideas.
           </p>
 
-          <div
-            onDrop={handleFileDrop}
-            onDragOver={(e) => e.preventDefault()}
-            onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-accent-dim rounded-xl p-8 cursor-pointer hover:border-accent transition-colors space-y-3"
-          >
-            <FileText className="w-8 h-8 mx-auto text-accent" />
-            <p className="text-sm text-foreground font-medium">Drop your file here or click to browse</p>
-            <p className="text-xs text-muted">Supports .txt, .pdf, and .docx (max 10MB)</p>
-          </div>
-          <input ref={fileInputRef} type="file" accept=".txt,.pdf,.docx" onChange={handleFilePick} className="hidden" />
+          {!file ? (
+            <>
+              <div
+                onDrop={handleFileDrop}
+                onDragOver={(e) => e.preventDefault()}
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-accent-dim rounded-xl p-8 cursor-pointer hover:border-accent transition-colors space-y-3"
+              >
+                <FileText className="w-8 h-8 mx-auto text-accent" />
+                <p className="text-sm text-foreground font-medium">Drop your file here or click to browse</p>
+                <p className="text-xs text-muted">Supports .txt, .pdf, and .docx (max 10MB)</p>
+              </div>
+              <input ref={fileInputRef} type="file" accept=".txt,.pdf,.docx" onChange={handleFilePick} className="hidden" />
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                <p className="text-sm text-green-400 font-medium">✓ {file.name}</p>
+                <p className="text-xs text-muted mt-1">{(file.size / 1024).toFixed(1)} KB</p>
+                <button onClick={() => { setFile(null); setCoverImage(null); }} className="text-xs text-red-400 hover:underline mt-2">
+                  Remove and choose a different file
+                </button>
+              </div>
+
+              <div className="border border-accent-dim rounded-xl overflow-hidden">
+                <div className="px-4 py-3 text-sm text-foreground font-medium text-left">
+                  Book Cover <span className="text-muted font-normal">(optional — for color scheme)</span>
+                </div>
+                <div className="px-4 py-3 border-t border-accent-dim space-y-2">
+                  <div
+                    onClick={() => coverInputRef.current?.click()}
+                    className="border-2 border-dashed border-accent-dim rounded-lg p-4 text-center cursor-pointer hover:border-accent transition-colors"
+                  >
+                    {coverImage ? (
+                      <img src={coverImage} alt="Book Cover" className="max-h-32 mx-auto rounded shadow-lg" />
+                    ) : (
+                      <p className="text-muted text-sm">Click to upload cover image</p>
+                    )}
+                  </div>
+                  <input ref={coverInputRef} type="file" accept="image/*" onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) { const r = new FileReader(); r.onload = (ev) => setCoverImage(ev.target?.result as string); r.readAsDataURL(f); }
+                  }} className="hidden" />
+                  {coverImage && (
+                    <button onClick={() => setCoverImage(null)} className="text-xs text-red-400 hover:underline">Remove</button>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={beginAnalysis}
+                className="w-full bg-accent text-white font-bold rounded-lg px-6 py-4 text-lg transition-all hover:bg-accent/90 active:scale-[0.98]"
+              >
+                <Rocket className="w-5 h-5 inline-block mr-2" />Analyze Manuscript
+              </button>
+            </div>
+          )}
 
           {error && <p className="text-sm text-red-400">{error}</p>}
-
-          <details className="text-left border border-accent-dim rounded-xl overflow-hidden">
-            <summary className="px-4 py-3 text-sm text-muted cursor-pointer hover:text-accent transition-colors font-medium">
-              Upload Book Cover (optional — for color scheme detection)
-            </summary>
-            <div className="px-4 py-3 border-t border-accent-dim space-y-2">
-              <div
-                onClick={() => coverInputRef.current?.click()}
-                className="border-2 border-dashed border-accent-dim rounded-lg p-4 text-center cursor-pointer hover:border-accent transition-colors"
-              >
-                {coverImage ? (
-                  <img src={coverImage} alt="Book Cover" className="max-h-32 mx-auto rounded shadow-lg" />
-                ) : (
-                  <p className="text-muted text-sm">Click to upload cover image</p>
-                )}
-              </div>
-              <input ref={coverInputRef} type="file" accept="image/*" onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) { const r = new FileReader(); r.onload = (ev) => setCoverImage(ev.target?.result as string); r.readAsDataURL(f); }
-              }} className="hidden" />
-              {coverImage && (
-                <button onClick={() => setCoverImage(null)} className="text-xs text-red-400 hover:underline">Remove</button>
-              )}
-            </div>
-          </details>
 
           <p className="text-xs text-muted">
             Your manuscript is encrypted and stored securely in the cloud.
@@ -347,15 +381,45 @@ export function ManuscriptWizard({ onComplete, onClose }: { onComplete: () => vo
           )}
         </div>
 
-        <button
-          onClick={handleGenerateAll}
-          className="w-full bg-accent text-white font-bold rounded-lg px-6 py-4 text-lg transition-all hover:bg-accent/90 active:scale-[0.98]"
-        >
-          <Rocket className="w-5 h-5 inline-block mr-2" />Generate All Marketing Content
-        </button>
-        <p className="text-xs text-muted text-center">
-          This will generate hooks, emails, pitches, social posts, ad copy, and video prompts from your manuscript.
-        </p>
+        <div className="bg-card border border-accent-dim rounded-xl p-4 space-y-3">
+          <p className="text-sm font-medium text-foreground">Select what to generate:</p>
+          <div className="grid grid-cols-2 gap-2">
+            {GENERATION_STEPS.map((g) => (
+              <label key={g.key} className="flex items-center gap-2 text-sm text-foreground cursor-pointer hover:text-accent transition-colors">
+                <input
+                  type="checkbox"
+                  checked={selectedTypes.has(g.key)}
+                  onChange={() => {
+                    const next = new Set(selectedTypes);
+                    if (next.has(g.key)) next.delete(g.key);
+                    else next.add(g.key);
+                    setSelectedTypes(next);
+                  }}
+                  className="accent-accent"
+                />
+                {g.label}
+              </label>
+            ))}
+          </div>
+          <button
+            onClick={handleGenerateAll}
+            disabled={selectedTypes.size === 0}
+            className="w-full bg-accent text-white font-bold rounded-lg px-6 py-4 text-lg transition-all hover:bg-accent/90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Rocket className="w-5 h-5 inline-block mr-2" />Generate Selected ({selectedTypes.size})
+          </button>
+          <button
+            onClick={() => setStep("done")}
+            className="w-full bg-card border border-accent-dim text-muted hover:text-foreground font-medium rounded-lg px-6 py-3 text-sm transition-all"
+          >
+            Skip — Chat with Characters Only
+          </button>
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+            <p className="text-xs text-yellow-400">
+              ⚠ AI-generated content may contain mistakes. Review all content before publishing or using in marketing.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -371,7 +435,7 @@ export function ManuscriptWizard({ onComplete, onClose }: { onComplete: () => vo
           <h2 className="text-xl font-bold text-foreground">Generating Your Content</h2>
 
           <div className="space-y-3 text-left max-w-sm mx-auto">
-            {GENERATION_STEPS.map((s, i) => (
+            {GENERATION_STEPS.filter((s) => selectedTypes.has(s.key)).map((s, i) => (
               <div key={s.key} className="flex items-center gap-3">
                 {i < generationProgress ? (
                   <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-bold">✓</div>
@@ -400,17 +464,20 @@ export function ManuscriptWizard({ onComplete, onClose }: { onComplete: () => vo
         <Sparkles className="w-12 h-12 mx-auto text-accent" />
         <h2 className="text-2xl font-bold text-foreground">All Set!</h2>
         <p className="text-sm text-muted">
-          Your manuscript has been analyzed and all marketing content has been pre-generated.
-          You can now review, customize, and publish from each tab.
+          {selectedTypes.size > 0
+            ? "Your manuscript has been analyzed and your selected marketing content has been generated. You can now review, customize, and publish from each tab."
+            : "Your manuscript has been analyzed. Head to the Character Chat tab to talk to your characters."}
         </p>
 
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          {GENERATION_STEPS.map((s) => (
-            <div key={s.key} className="bg-green-500/10 text-green-400 rounded-lg px-3 py-2">
-              ✅ {s.label}
-            </div>
-          ))}
-        </div>
+        {selectedTypes.size > 0 && (
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            {GENERATION_STEPS.filter((s) => selectedTypes.has(s.key)).map((s) => (
+              <div key={s.key} className="bg-green-500/10 text-green-400 rounded-lg px-3 py-2">
+                ✅ {s.label}
+              </div>
+            ))}
+          </div>
+        )}
 
         <button
           onClick={onComplete}

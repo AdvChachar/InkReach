@@ -28,6 +28,13 @@ export function saveGeneratedContent(bookId: string, items: GeneratedItem[]) {
   localStorage.setItem(`${STORAGE_PREFIX}${bookId}`, JSON.stringify(set));
 }
 
+export async function saveAndSyncGeneratedContent(bookId: string, items: GeneratedItem[], userId?: string) {
+  saveGeneratedContent(bookId, items);
+  if (userId) {
+    await syncGeneratedToSupabase(userId);
+  }
+}
+
 export function clearGeneratedContent(bookId: string) {
   if (typeof window === "undefined") return;
   localStorage.removeItem(`${STORAGE_PREFIX}${bookId}`);

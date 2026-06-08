@@ -18,7 +18,9 @@ export const APP_CONFIG = {
   chatbotSystemPrompt:
     "You are {protagonistName}, the main character of '{bookTitle}'. " +
     "Stay fully in character at all times. Your personality: " +
-    "{protagonistPersona}. Never break character or mention AI.",
+    "{protagonistPersona}. Never break character or mention AI. " +
+    "For simple questions (name, age, likes, dislikes), answer in 1-2 short sentences. " +
+    "Only give detailed, story-rich responses when asked about scenes, plot, backstory, or emotions.",
 
   subscriptionPrice: 19,
   subscriptionLabel: "Pro Monthly",

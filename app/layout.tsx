@@ -21,7 +21,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`h-full antialiased ${dmSans.variable}`}>
+    <html lang="en" className={`h-full antialiased ${dmSans.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `(function(){var t=localStorage.getItem("inkreach_theme");document.documentElement.setAttribute("data-theme",t==="dark"?"dark":"light")})()`,
+        }} />
+      </head>
       <body className="min-h-full">
         <ThemeProvider>{children}</ThemeProvider>
       </body>

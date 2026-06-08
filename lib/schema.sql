@@ -299,9 +299,54 @@ CREATE POLICY "Users can CRUD own ARC reviewers"
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+-- 14. Chat History (persistent per character per book)
+CREATE TABLE IF NOT EXISTS chat_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+  character_index INTEGER NOT NULL DEFAULT 0,
+  messages JSONB NOT NULL DEFAULT '[]',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE chat_history ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can CRUD own chat history" ON chat_history;
+CREATE POLICY "Users can CRUD own chat history"
+  ON chat_history FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- 15. Chat Flags (user-reported character response issues)
+CREATE TABLE IF NOT EXISTS chat_flags (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+  character_name TEXT NOT NULL DEFAULT '',
+  original_response TEXT NOT NULL DEFAULT '',
+  user_feedback TEXT NOT NULL DEFAULT '',
+  suggested_response TEXT DEFAULT '',
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending','reviewed','resolved')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE chat_flags ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can insert own chat flags" ON chat_flags;
+CREATE POLICY "Users can insert own chat flags"
+  ON chat_flags FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can read own chat flags" ON chat_flags;
+CREATE POLICY "Users can read own chat flags"
+  ON chat_flags FOR SELECT
+  USING (auth.uid() = user_id);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_books_user_id ON books(user_id);
 CREATE INDEX IF NOT EXISTS idx_manuscript_analyses_book_id ON manuscript_analyses(book_id);
 CREATE INDEX IF NOT EXISTS idx_generated_content_book_id ON generated_content(book_id);
 CREATE INDEX IF NOT EXISTS idx_usage_logs_user_id ON usage_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_usage_logs_created_at ON usage_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_chat_history_book_character ON chat_history(book_id, character_index);
+CREATE INDEX IF NOT EXISTS idx_chat_flags_user ON chat_flags(user_id);

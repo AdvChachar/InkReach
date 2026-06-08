@@ -6,6 +6,7 @@
 # 🛑 GLOBAL RULE: Do not modify .env files or config files containing secrets without asking.
 # 🛑 GLOBAL RULE: Do not modify database schemas or production data without asking.
 # 🛑 GLOBAL RULE: Never commit, push, or deploy anything before double-checking security audits and protocols. If everything is secure, ask for permission to commit, push, and deploy.
+# 🛑 GLOBAL RULE: Batch deploys — accumulate 10 change requests in the deploy-batch memory list before any deploy. Do not commit, push, or deploy for fewer than 10 items. Track every change request in deploy-batch memory. Only deploy when the count reaches exactly 10 or the user explicitly says to deploy early.
 <!-- END:global-rules -->
 
 <!-- BEGIN:nextjs-agent-rules -->
