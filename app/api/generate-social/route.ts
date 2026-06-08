@@ -1,8 +1,6 @@
-import Groq from "groq-sdk";
 import { requireSubscription } from "@/lib/check-subscription";
 import { checkRateLimit } from "@/lib/rate-limit";
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+import { createChatCompletion } from "@/lib/groq";
 
 export async function POST(req: Request) {
   const sub = await requireSubscription();
@@ -34,7 +32,7 @@ For EACH post provide:
 Make each post feel native to ${platform} — not like an ad.`;
 
   try {
-    const completion = await groq.chat.completions.create({
+    const completion = await createChatCompletion({
       messages: [{ role: "user", content: prompt }],
       model: "llama-3.3-70b-versatile",
     });

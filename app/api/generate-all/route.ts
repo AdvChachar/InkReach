@@ -1,9 +1,7 @@
-import Groq from "groq-sdk";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { checkRateLimit } from "@/lib/rate-limit";
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+import { createChatCompletion } from "@/lib/groq";
 
 async function getUserStatus() {
   const cookieStore = await cookies();
@@ -130,7 +128,7 @@ export async function POST(req: Request) {
     for (const type of toGenerate) {
       if (!PROMPTS[type]) continue;
       try {
-        const completion = await groq.chat.completions.create({
+        const completion = await createChatCompletion({
           messages: [{ role: "user", content: PROMPTS[type](analysis) }],
           model: "llama-3.3-70b-versatile",
         });

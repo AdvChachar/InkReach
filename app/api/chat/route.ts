@@ -1,8 +1,6 @@
-import Groq from "groq-sdk";
 import { createServerSupabase } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+import { createChatCompletion } from "@/lib/groq";
 
 export async function POST(req: Request) {
   const supabase = await createServerSupabase();
@@ -30,7 +28,7 @@ export async function POST(req: Request) {
   messages.push({ role: "user", content: `Continue as ${protagonistName}.` });
 
   try {
-    const completion = await groq.chat.completions.create({
+    const completion = await createChatCompletion({
       messages,
       model: "llama-3.3-70b-versatile",
     });

@@ -1,8 +1,6 @@
-import Groq from "groq-sdk";
 import { createServerSupabase } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+import { createChatCompletion } from "@/lib/groq";
 
 export async function POST(req: Request) {
   const supabase = await createServerSupabase();
@@ -38,7 +36,7 @@ For EACH concept provide exactly:
 Make each concept feel native to TikTok — NOT like an advertisement.`;
 
   try {
-    const completion = await groq.chat.completions.create({
+    const completion = await createChatCompletion({
       messages: [{ role: "user", content: prompt }],
       model: "llama-3.3-70b-versatile",
     });
