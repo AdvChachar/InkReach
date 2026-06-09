@@ -1,10 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export async function createServerSupabase() {
+export async function createServerSupabase(req?: Request) {
   const cookieStore = await cookies();
 
-  return createServerClient(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -20,10 +20,20 @@ export async function createServerSupabase() {
       },
     }
   );
+
+  if (req) {
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.slice(7);
+      await (supabase.auth as any).setSession({ access_token: token, refresh_token: "" });
+    }
+  }
+
+  return supabase;
 }
 
-export async function requireUser() {
-  const supabase = await createServerSupabase();
+export async function requireUser(req?: Request) {
+  const supabase = await createServerSupabase(req);
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

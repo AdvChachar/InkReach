@@ -4,7 +4,7 @@ import { createServerSupabase } from "@/lib/supabase-server";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
-  const supabase = await createServerSupabase();
+  const supabase = await createServerSupabase(req);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return Response.json({ error: "Unauthorized. Please sign in." }, { status: 401 });

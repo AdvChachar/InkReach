@@ -3,7 +3,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { createChatCompletion } from "@/lib/groq";
 
 export async function POST(req: Request) {
-  const supabase = await createServerSupabase();
+  const supabase = await createServerSupabase(req);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return Response.json({ error: "Unauthorized. Please sign in." }, { status: 401 });
