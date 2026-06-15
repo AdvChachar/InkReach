@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getServiceSupabase } from "./supabase-admin";
 
 export async function createServerSupabase(req?: Request) {
   const cookieStore = await cookies();
@@ -25,7 +26,17 @@ export async function createServerSupabase(req?: Request) {
     const authHeader = req.headers.get("Authorization");
     if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.slice(7);
-      await (supabase.auth as any).setSession({ access_token: token, refresh_token: "" });
+      const admin = getServiceSupabase();
+      if (admin) {
+        const { data, error } = await admin.auth.getUser(token);
+        if (!error && data?.user) {
+          await supabase.auth.setSession({
+            access_token: token,
+            refresh_token: token,
+            token_type: "bearer",
+          });
+        }
+      }
     }
   }
 
